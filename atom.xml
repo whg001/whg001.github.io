@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://whg001.github.io</id>
     <title>Gridea</title>
-    <updated>2021-07-01T16:03:17.131Z</updated>
+    <updated>2021-07-01T16:06:14.728Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://whg001.github.io"/>
     <link rel="self" href="https://whg001.github.io/atom.xml"/>
@@ -16,7 +16,9 @@
         <link href="https://whg001.github.io/post/huan-cun/">
         </link>
         <updated>2021-07-01T15:58:27.000Z</updated>
-        <content type="html"><![CDATA[<p>从广义上说，产生缓存雪崩的原因有两种：</p>
+        <content type="html"><![CDATA[<!-- more -->
+<!-- more -->
+<p>从广义上说，产生缓存雪崩的原因有两种：</p>
 <p>​	第一种是，缓存系统本身不可用，导致大量请求直接回源到数据库；</p>
 <p>​	第二种是，应用设计层面大量的 Key 在同一时间过期，导致大量的数据回源。</p>
 <p>解决方案：</p>
