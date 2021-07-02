@@ -1,22 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <id>https://whg001.github.io</id>
+    <id>https://haogui.github.io</id>
     <title>Gridea</title>
-    <updated>2021-07-02T01:37:05.515Z</updated>
+    <updated>2021-07-02T01:38:57.949Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
-    <link rel="alternate" href="https://whg001.github.io"/>
-    <link rel="self" href="https://whg001.github.io/atom.xml"/>
+    <link rel="alternate" href="https://haogui.github.io"/>
+    <link rel="self" href="https://haogui.github.io/atom.xml"/>
     <subtitle>温故而知新</subtitle>
-    <logo>https://whg001.github.io/images/avatar.png</logo>
-    <icon>https://whg001.github.io/favicon.ico</icon>
+    <logo>https://haogui.github.io/images/avatar.png</logo>
+    <icon>https://haogui.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, Gridea</rights>
     <entry>
         <title type="html"><![CDATA[缓存]]></title>
-        <id>https://whg001.github.io/post/huan-cun/</id>
-        <link href="https://whg001.github.io/post/huan-cun/">
+        <id>https://haogui.github.io/post/huan-cun/</id>
+        <link href="https://haogui.github.io/post/huan-cun/">
         </link>
         <updated>2021-07-01T15:58:27.000Z</updated>
         <content type="html"><![CDATA[<!-- more -->
+<!-- more -->
 <!-- more -->
 <p>从广义上说，产生缓存雪崩的原因有两种：</p>
 <p>​	第一种是，缓存系统本身不可用，导致大量请求直接回源到数据库；</p>
@@ -89,8 +90,8 @@
     </entry>
     <entry>
         <title type="html"><![CDATA[Hello Gridea]]></title>
-        <id>https://whg001.github.io/post/hello-gridea/</id>
-        <link href="https://whg001.github.io/post/hello-gridea/">
+        <id>https://haogui.github.io/post/hello-gridea/</id>
+        <link href="https://haogui.github.io/post/hello-gridea/">
         </link>
         <updated>2018-12-11T16:00:00.000Z</updated>
         <summary type="html"><![CDATA[<p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
