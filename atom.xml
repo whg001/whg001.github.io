@@ -1,92 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://whg001.github.io</id>
-    <title>Gridea</title>
-    <updated>2021-07-02T06:04:17.703Z</updated>
+    <title>haogui</title>
+    <updated>2021-07-02T06:06:01.124Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://whg001.github.io"/>
     <link rel="self" href="https://whg001.github.io/atom.xml"/>
-    <subtitle>温故而知新</subtitle>
+    <subtitle>人得自个成全自个</subtitle>
     <logo>https://whg001.github.io/images/avatar.png</logo>
     <icon>https://whg001.github.io/favicon.ico</icon>
-    <rights>All rights reserved 2021, Gridea</rights>
+    <rights>All rights reserved 2021, haogui</rights>
     <entry>
         <title type="html"><![CDATA[缓存注意点]]></title>
         <id>https://whg001.github.io/post/huan-cun/</id>
         <link href="https://whg001.github.io/post/huan-cun/">
         </link>
         <updated>2021-07-01T15:58:27.000Z</updated>
-        <content type="html"><![CDATA[<!-- more -->
-<!-- more -->
-<!-- more -->
-<p>从广义上说，产生缓存雪崩的原因有两种：</p>
-<p>​	第一种是，缓存系统本身不可用，导致大量请求直接回源到数据库；</p>
-<p>​	第二种是，应用设计层面大量的 Key 在同一时间过期，导致大量的数据回源。</p>
-<p>解决方案：</p>
-<p>方案一，差异化缓存过期时间，不要让大量的 Key 在同一时间过期</p>
-<p>方案二，让缓存不主动过期。初始化缓存数据的时候设置缓存永不过期，然后启动一个后台线程 30 秒一次定时把所有数据更新到缓存，而且通过适当的休眠，控制从数据库更新数据的频率，降低数据库压力（如果无法全量缓存所有数据则此方案行不通）</p>
-<p><strong>缓存穿透和缓存击穿的区别：</strong></p>
-<p>​	缓存穿透是指，缓存没有起到压力缓冲的作用</p>
-<p>​	而缓存击穿是指，缓存失效时瞬时的并发打到数据库</p>
-<p>对于高并发的缓存 Key 回源问题，可以使用锁来限制回源并发数；对于不存在的数据穿透缓存的问题，可以通过布隆过滤器进行数据存在性的预判，或在缓存中也设置一个值来解决。</p>
-<h3 id="缓存同步策略">缓存同步策略</h3>
-<ol>
-<li>
-<p>先更新缓存，再更新数据库；</p>
-</li>
-<li>
-<p>先更新数据库，再更新缓存；</p>
-</li>
-<li>
-<p>先删除缓存，再更新数据库，访问的时候按需加载数据到缓存；</p>
-</li>
-<li>
-<p>先更新数据库，再删除缓存，访问的时候按需加载数据到缓存。</p>
-</li>
-</ol>
-<p><strong>对应的优缺点</strong></p>
-<p>“先更新缓存再更新数据库”策略不可行。数据库设计复杂，压力集中，数据库因为超时等原因更新操作失败的可能性较大，此外还会涉及事务，很可能因为数据库更新失败，导致缓存和数据库的数据不一致。</p>
-<p>“先更新数据库再更新缓存”策略不可行。一是，<strong>如果线程 A 和 B 先后完成数据库更新，但更新缓存时却是 B 和 A 的顺序，那很可能会把旧数据更新到缓存中引起数据不一致</strong>；二是，我们不确定缓存中的数据是否会被访问，不一定要把所有数据都更新到缓存中去。</p>
-<p>“先删除缓存再更新数据库，访问的时候按需加载数据到缓存”策略也不可行。在并发的情况下，很可能删除缓存后还没来得及更新数据库，就有另一个线程先读取了旧值到缓存中，如果并发量很大的话这个概率也会很大。</p>
-<p>“先更新数据库再删除缓存，访问的时候按需加载数据到缓存”策略是最好的。虽然在极端情况下，这种策略也可能出现数据不一致的问题，但概率非常低，基本可以忽略。举一个“极端情况”的例子，比如更新数据的时间节点恰好是缓存失效的瞬间，这时 A 先读取到了旧值，随后在 B 操作数据库完成更新并且删除了缓存之后，A 再把旧值加入缓存</p>
-<p><strong>因此，针对缓存更新更推荐的方式是，缓存中的数据不由数据更新操作主动触发，统一在需要使用的时候按需加载，数据更新后及时删除缓存中的数据即可。</strong></p>
-<h3 id="内存淘汰策略">内存淘汰策略</h3>
-<p>从 Redis 服务端的角度来说，缓存系统可以保存的数据量一定是小于原始数据的。</p>
-<p>首先，我们应该限制 Redis 对内存的使用量，也就是设置 maxmemory 参数；其次，我们应该根据数据特点，明确 Redis 应该以怎样的算法来驱逐数据。</p>
-<p>从Redis 的文档可以看到[href:https://redis.io/topics/lru-cache] 当数据内存已到最大时再添加元素要不就直接返回错误，要不就采用淘汰策略( Eviction policies)，常用的数据淘汰策略有：</p>
-<ol>
-<li>
-<p>allkeys-lru，针对所有 Key，优先删除最近最少使用的 Key；</p>
-</li>
-<li>
-<p>volatile-lru，针对带有过期时间的 Key，优先删除最近最少使用的 Key；</p>
-</li>
-<li>
-<p>volatile-ttl，针对带有过期时间的 Key，优先删除即将过期的 Key（根据 TTL 的值）；</p>
-</li>
-<li>
-<p>allkeys-lfu（Redis 4.0 以上），针对所有 Key，优先删除最少使用的 Key；volatile-lfu（Redis 4.0 以上），针对带有过期时间的 Key，优先删除最少使用的 Key。</p>
-</li>
-</ol>
-<h3 id="清理过期数据">清理过期数据</h3>
-<ol>
-<li>
-<p>惰性删除：当你访问这个key的时候如果，如果这个key已经过期则进行清除</p>
-</li>
-<li>
-<p>主动过期：如果仅仅靠被动过期，导致已经过期的key不再访问，会使这些key一直占用内存，浪费内存空间，所以redis也有主动过期的方式，每隔10秒，redis会做一下操作：</p>
-<ol>
-<li>随机抽取20个过期属性的key。</li>
-<li>删除已经过期的key。</li>
-<li>如果超过25%的key已经过期了，就会重新执行第一个操作。</li>
-</ol>
-<p>从这个算法来说，整个redis内存中，过期的数据会控制在25%以内。</p>
-</li>
-</ol>
-<h3 id="相关文章">相关文章</h3>
-<p>https://www.infoq.cn/article/3L3zAQ4H8xpNoM2glSyi   插个眼业务数据redis 热点数据分析案例</p>
-<p>https://github.com/xueqiu/rdr   golang解析redis-rdb 拥有bigkey</p>
-]]></content>
     </entry>
     <entry>
         <title type="html"><![CDATA[Hello Gridea]]></title>
@@ -99,25 +28,6 @@
 ]]></summary>
         <content type="html"><![CDATA[<p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
 ✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
-<!-- more -->
-<p><a href="https://github.com/getgridea/gridea">Github</a><br>
-<a href="https://gridea.dev/">Gridea 主页</a><br>
-<a href="http://fehey.com/">示例网站</a></p>
-<h2 id="特性">特性👇</h2>
-<p>📝  你可以使用最酷的 <strong>Markdown</strong> 语法，进行快速创作</p>
-<p>🌉  你可以给文章配上精美的封面图和在文章任意位置插入图片</p>
-<p>🏷️  你可以对文章进行标签分组</p>
-<p>📋  你可以自定义菜单，甚至可以创建外部链接菜单</p>
-<p>💻  你可以在 <strong>Windows</strong>，<strong>MacOS</strong> 或 <strong>Linux</strong> 设备上使用此客户端</p>
-<p>🌎  你可以使用 <strong>𝖦𝗂𝗍𝗁𝗎𝖻 𝖯𝖺𝗀𝖾𝗌</strong> 或 <strong>Coding Pages</strong> 向世界展示，未来将支持更多平台</p>
-<p>💬  你可以进行简单的配置，接入 <a href="https://github.com/gitalk/gitalk">Gitalk</a> 或 <a href="https://github.com/SukkaW/DisqusJS">DisqusJS</a> 评论系统</p>
-<p>🇬🇧  你可以使用<strong>中文简体</strong>或<strong>英语</strong></p>
-<p>🌁  你可以任意使用应用内默认主题或任意第三方主题，强大的主题自定义能力</p>
-<p>🖥  你可以自定义源文件夹，利用 OneDrive、百度网盘、iCloud、Dropbox 等进行多设备同步</p>
-<p>🌱 当然 <strong>Gridea</strong> 还很年轻，有很多不足，但请相信，它会不停向前 🏃</p>
-<p>未来，它一定会成为你离不开的伙伴</p>
-<p>尽情发挥你的才华吧！</p>
-<p>😘 Enjoy~</p>
 ]]></content>
     </entry>
 </feed>
