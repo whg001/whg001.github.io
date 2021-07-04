@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://whg001.github.io</id>
     <title>haogui</title>
-    <updated>2021-07-03T00:56:37.412Z</updated>
+    <updated>2021-07-04T13:21:43.504Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://whg001.github.io"/>
     <link rel="self" href="https://whg001.github.io/atom.xml"/>
@@ -10,6 +10,13 @@
     <logo>https://whg001.github.io/images/avatar.png</logo>
     <icon>https://whg001.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, haogui</rights>
+    <entry>
+        <title type="html"><![CDATA[ClassLoad解决问题场景]]></title>
+        <id>https://whg001.github.io/post/classload-jie-jue-wen-ti-chang-jing/</id>
+        <link href="https://whg001.github.io/post/classload-jie-jue-wen-ti-chang-jing/">
+        </link>
+        <updated>2021-07-04T12:30:31.000Z</updated>
+    </entry>
     <entry>
         <title type="html"><![CDATA[快速又节省]]></title>
         <id>https://whg001.github.io/post/kuai-su-you-jie-sheng/</id>
