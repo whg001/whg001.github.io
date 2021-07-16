@@ -3,7 +3,7 @@
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>AQS | haogui</title>
-<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1626449109342">
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1626478736795">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
 <link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
 <link rel="alternate" type="application/atom+xml" title="AQS | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
@@ -17,7 +17,7 @@ AQS全称AbstractQueuedSynchronizer，其实这个名字就道出了他的一切
 是一个抽象类，Abstract
 其数据结构是一个队列，Queued
 通过改..." />
-    <meta name="keywords" content="" />
+    <meta name="keywords" content="原创,java" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
     <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
   </head>
@@ -26,7 +26,7 @@ AQS全称AbstractQueuedSynchronizer，其实这个名字就道出了他的一切
       <div class="main-content">
         <div class="site-header">
   <a href="https://whg001.github.io">
-  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1626449109342" alt="">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1626478736795" alt="">
   </a>
   <h1 class="site-title">
     haogui
@@ -86,10 +86,20 @@ AQS全称AbstractQueuedSynchronizer，其实这个名字就道出了他的一切
                 2021-07-16
               </span>
               <span>
-                5 min read
+                6 min read
               </span>
               
+                <a href="https://whg001.github.io/tag/qCSWQaDUs/" class="post-tag">
+                  # 原创
+                </a>
+              
+                <a href="https://whg001.github.io/tag/PNv5KdDzK/" class="post-tag">
+                  # java
+                </a>
+              
             </div>
+            
+              <img class="post-feature-image" src="https://whg001.github.io/post-images/aqs.png" alt="">
             
             <div class="post-content-wrapper">
               <div class="post-content">
@@ -106,7 +116,18 @@ AQS全称AbstractQueuedSynchronizer，其实这个名字就道出了他的一切
 <p>AQS使用一个Volatile的int类型的成员变量来表示同步状态，通过内置的FIFO队列来完成资源获取的排队工作，通过CAS完成对State值的修改。</p>
 <p>没有获取到的资源的线程，即state值达不到他想要的，<strong>他就会把他生成一个node(将线程存入其中)随后加入队列中,并挂起此线程</strong></p>
 <h2 id="源码解析主要流程">源码解析主要流程</h2>
-<p>看源码时需注意他的头结点为空的节点，不然容易陷进去</p>
+<p>看源码时需注意他的头结点是没有实际数据的节点在算法中经常使用称之为哨兵节点，不然容易陷进去</p>
+<blockquote>
+<p>链表中的哨兵节点的好处：<strong>头结点不会为空，减少边界的判断，从而防止对特殊条件的判断，使代码更为简便优雅</strong><br>
+没有哨兵节点的正常流程</p>
+<ol>
+<li>新增元素的时候先判断判断头结点是否为空，头结点为空则新建头结点</li>
+<li>头结点不为空则取笑一个元素直至next为空</li>
+</ol>
+</blockquote>
+<blockquote>
+<p>如果使用的哨兵节点则第一步可以省略，既可以使代码对边界的处理更加清晰，也能减少每次新增是的判断头结点</p>
+</blockquote>
 <h3 id="资源获取acquire">资源获取acquire</h3>
 <p>aqs中的源代码如下，acquire()获取资源，state符合要求返回true(也就是tryAcquire)，否则将线程加入队列中，并将其挂起。tryAcquire由子类实现，aqs主要负责获取资源时，不符合条件后的操作(加入等待队列，挂起线程)与释放的操作</p>
 <pre><code class="language-java">
@@ -219,9 +240,10 @@ AQS全称AbstractQueuedSynchronizer，其实这个名字就道出了他的一切
         }
     }
 </code></pre>
-<p>如上代码所示，lock时判断state是否为0或者是不是本身就是他在战友，不为0则释放</p>
+<p>如上代码所示，lock时判断state是否为0或者是不是本身就是他在占有，不为0则释放</p>
 <h2 id="总结">总结</h2>
-<p>AQS提供的是一种数据结构与通用方法，让子类随自己需求进行线程锁定</p>
+<p>AQS提供的是一种数据结构与通用方法，让子类随自己需求进行线程锁定。</p>
+<p>如果翻看过我之前编写future源码解析，你会发现他们的共同之处，都是通过一个state来进行控制各个线程的状态，且将没有达到条件的线程挂起，并加入到阻塞队列，等待条件满足后再一一唤醒</p>
 
               </div>
               <div class="toc-container">
