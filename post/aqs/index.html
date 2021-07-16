@@ -1,0 +1,339 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AQS | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1626448014155">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="AQS | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="本文粗略的过一下juc下面的锁，其aqs的数据结构与一些基本原理。
+AQS全称AbstractQueuedSynchronizer，其实这个名字就道出了他的一切。
+
+是一个抽象类，Abstract
+其数据结构是一个队列，Queued
+通过改..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1626448014155" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/huan-cun" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              AQS
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-07-16
+              </span>
+              <span>
+                5 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <p>本文粗略的过一下juc下面的锁，其aqs的数据结构与一些基本原理。<br>
+AQS全称AbstractQueuedSynchronizer，其实这个名字就道出了他的一切。</p>
+<ol>
+<li>是一个抽象类，Abstract</li>
+<li>其数据结构是一个队列，Queued</li>
+<li>通过改变一个state的值来达到，Synchronizer</li>
+</ol>
+<h2 id="数据结构">数据结构</h2>
+<figure data-type="image" tabindex="1"><img src="https://whg001.github.io/post-images/1626445106497.jpeg" alt="" loading="lazy"></figure>
+<p>AQS核心思想是，如果被请求的共享资源空闲，那么就将当前请求资源的线程设置为有效的工作线程，将共享资源设置为锁定状态；如果共享资源被占用，就需要一定的阻塞等待唤醒机制来保证锁分配。这个机制主要用的是CLH队列的变体实现的，将暂时获取不到锁的线程加入到队列中。</p>
+<p>AQS使用一个Volatile的int类型的成员变量来表示同步状态，通过内置的FIFO队列来完成资源获取的排队工作，通过CAS完成对State值的修改。</p>
+<p>没有获取到的资源的线程，即state值达不到他想要的，<strong>他就会把他生成一个node(将线程存入其中)随后加入队列中,并挂起此线程</strong></p>
+<h2 id="源码解析主要流程">源码解析主要流程</h2>
+<p>看源码时需注意他的头结点为空的节点，不然容易陷进去</p>
+<h3 id="资源获取acquire">资源获取acquire</h3>
+<p>aqs中的源代码如下，acquire()获取资源，state符合要求返回true(也就是tryAcquire)，否则将线程加入队列中，并将其挂起。tryAcquire由子类实现，aqs主要负责获取资源时，不符合条件后的操作(加入等待队列，挂起线程)与释放的操作</p>
+<pre><code class="language-java">
+    /**
+     * Acquires in exclusive mode, ignoring interrupts.  Implemented
+     * by invoking at least once {@link #tryAcquire},
+     * returning on success.  Otherwise the thread is queued, possibly
+     * repeatedly blocking and unblocking, invoking {@link
+     * #tryAcquire} until success.  This method can be used
+     * to implement method {@link Lock#lock}.
+     *
+     * @param arg the acquire argument.  This value is conveyed to
+     *        {@link #tryAcquire} but is otherwise uninterpreted and
+     *        can represent anything you like.
+     */
+    public final void acquire(int arg) {
+        if (!tryAcquire(arg) &amp;&amp;
+            acquireQueued(addWaiter(Node.EXCLUSIVE), arg))
+            selfInterrupt();
+    }
+</code></pre>
+<h3 id="资源释放release">资源释放release</h3>
+<p>当释放锁是需要释放对应的资源，且唤醒在排队的线程源码如下</p>
+<pre><code class="language-java">
+    /**
+     * Releases in exclusive mode.  Implemented by unblocking one or
+     * more threads if {@link #tryRelease} returns true.
+     * This method can be used to implement method {@link Lock#unlock}.
+     *
+     * @param arg the release argument.  This value is conveyed to
+     *        {@link #tryRelease} but is otherwise uninterpreted and
+     *        can represent anything you like.
+     * @return the value returned from {@link #tryRelease}
+     */
+    public final boolean release(int arg) {
+        if (tryRelease(arg)) {
+            Node h = head;
+            if (h != null &amp;&amp; h.waitStatus != 0)
+                unparkSuccessor(h);
+            return true;
+        }
+        return false;
+    }
+</code></pre>
+<p>tryRelease是一个抽象方法，由子类实现，他来决定干些什么，unparkSuccessor唤醒下一个可以获得资源的线程源码如下</p>
+<pre><code class="language-java">
+    /**
+     * Wakes up node's successor, if one exists.
+     *
+     * @param node the node
+     */
+    private void unparkSuccessor(Node node) {
+        /*
+         * If status is negative (i.e., possibly needing signal) try
+         * to clear in anticipation of signalling.  It is OK if this
+         * fails or if status is changed by waiting thread.
+         */
+        int ws = node.waitStatus;
+        if (ws &lt; 0)
+            compareAndSetWaitStatus(node, ws, 0);
+
+        /*
+         * Thread to unpark is held in successor, which is normally
+         * just the next node.  But if cancelled or apparently null,
+         * traverse backwards from tail to find the actual
+         * non-cancelled successor.
+         */
+        Node s = node.next;
+        if (s == null || s.waitStatus &gt; 0) {
+            s = null;
+            for (Node t = tail; t != null &amp;&amp; t != node; t = t.prev)
+                if (t.waitStatus &lt;= 0)
+                    s = t;
+        }
+        if (s != null)
+            LockSupport.unpark(s.thread);
+    }
+</code></pre>
+<p>如上代码所示将下一个节点唤醒</p>
+<h2 id="对应aqs实现类">对应aqs实现类</h2>
+<p><strong>FairSync</strong></p>
+<pre><code class="language-java"> static final class FairSync extends Sync {
+        private static final long serialVersionUID = -3000897897090466540L;
+        final void lock() {
+            acquire(1);
+        }
+
+        /**
+         * Fair version of tryAcquire.  Don't grant access unless
+         * recursive call or no waiters or is first.
+         */
+        protected final boolean tryAcquire(int acquires) {
+            final Thread current = Thread.currentThread();
+            int c = getState();
+            if (c == 0) {
+                if (!hasQueuedPredecessors() &amp;&amp;
+                    compareAndSetState(0, acquires)) {
+                    setExclusiveOwnerThread(current);
+                    return true;
+                }
+            }
+            else if (current == getExclusiveOwnerThread()) {
+                int nextc = c + acquires;
+                if (nextc &lt; 0)
+                    throw new Error(&quot;Maximum lock count exceeded&quot;);
+                setState(nextc);
+                return true;
+            }
+            return false;
+        }
+    }
+</code></pre>
+<p>如上代码所示，lock时判断state是否为0或者是不是本身就是他在战友，不为0则释放</p>
+<h2 id="总结">总结</h2>
+<p>AQS提供的是一种数据结构与通用方法，让子类随自己需求进行线程锁定</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84">数据结构</a></li>
+<li><a href="#%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%E4%B8%BB%E8%A6%81%E6%B5%81%E7%A8%8B">源码解析主要流程</a>
+<ul>
+<li><a href="#%E8%B5%84%E6%BA%90%E8%8E%B7%E5%8F%96acquire">资源获取acquire</a></li>
+<li><a href="#%E8%B5%84%E6%BA%90%E9%87%8A%E6%94%BErelease">资源释放release</a></li>
+</ul>
+</li>
+<li><a href="#%E5%AF%B9%E5%BA%94aqs%E5%AE%9E%E7%8E%B0%E7%B1%BB">对应aqs实现类</a></li>
+<li><a href="#%E6%80%BB%E7%BB%93">总结</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/atomic-lei-jia-yuan-li/">
+              <h3 class="post-title">
+                Atomic累加原理
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

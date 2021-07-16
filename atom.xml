@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://whg001.github.io</id>
     <title>haogui</title>
-    <updated>2021-07-16T14:06:44.758Z</updated>
+    <updated>2021-07-16T15:06:59.789Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://whg001.github.io"/>
     <link rel="self" href="https://whg001.github.io/atom.xml"/>
@@ -10,6 +10,13 @@
     <logo>https://whg001.github.io/images/avatar.png</logo>
     <icon>https://whg001.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, haogui</rights>
+    <entry>
+        <title type="html"><![CDATA[AQS]]></title>
+        <id>https://whg001.github.io/post/aqs/</id>
+        <link href="https://whg001.github.io/post/aqs/">
+        </link>
+        <updated>2021-07-16T14:06:46.000Z</updated>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Atomic累加原理]]></title>
         <id>https://whg001.github.io/post/atomic-lei-jia-yuan-li/</id>
