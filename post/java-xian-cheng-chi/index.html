@@ -1,0 +1,318 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>java线程池 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1626513994703">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="java线程池 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="今天作为复习，在此扯一扯java线程池的相关概念，并分享一个生产因为线程池使用不当而导致的重大事故。
+基本概念
+线程池，顾名思义里面是一个存放着线程的容器，可以反复利用其中的线程处理实现了对应的Runnable的类。从而避免了反复创建，销毁..." />
+    <meta name="keywords" content="原创,java" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1626513994703" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/huan-cun" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              java线程池
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-07-17
+              </span>
+              <span>
+                6 min read
+              </span>
+              
+                <a href="https://whg001.github.io/tag/qCSWQaDUs/" class="post-tag">
+                  # 原创
+                </a>
+              
+                <a href="https://whg001.github.io/tag/PNv5KdDzK/" class="post-tag">
+                  # java
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <p>今天作为复习，在此扯一扯java线程池的相关概念，并分享一个生产因为线程池使用不当而导致的重大事故。</p>
+<h2 id="基本概念">基本概念</h2>
+<p>线程池，顾名思义里面是一个存放着线程的容器，可以反复利用其中的线程处理实现了对应的Runnable的类。从而避免了反复创建，销毁线程的开销。</p>
+<h3 id="构造函数讲解">构造函数讲解</h3>
+<p>以下为线程池构造方法的源码</p>
+<pre><code class="language-java">
+    /**
+     * Creates a new {@code ThreadPoolExecutor} with the given initial
+     * parameters.
+     *
+     * @param corePoolSize the number of threads to keep in the pool, even
+     *        if they are idle, unless {@code allowCoreThreadTimeOut} is set
+     * @param maximumPoolSize the maximum number of threads to allow in the
+     *        pool
+     * @param keepAliveTime when the number of threads is greater than
+     *        the core, this is the maximum time that excess idle threads
+     *        will wait for new tasks before terminating.
+     * @param unit the time unit for the {@code keepAliveTime} argument
+     * @param workQueue the queue to use for holding tasks before they are
+     *        executed.  This queue will hold only the {@code Runnable}
+     *        tasks submitted by the {@code execute} method.
+     * @param threadFactory the factory to use when the executor
+     *        creates a new thread
+     * @param handler the handler to use when execution is blocked
+     *        because the thread bounds and queue capacities are reached
+     * @throws IllegalArgumentException if one of the following holds:&lt;br&gt;
+     *         {@code corePoolSize &lt; 0}&lt;br&gt;
+     *         {@code keepAliveTime &lt; 0}&lt;br&gt;
+     *         {@code maximumPoolSize &lt;= 0}&lt;br&gt;
+     *         {@code maximumPoolSize &lt; corePoolSize}
+     * @throws NullPointerException if {@code workQueue}
+     *         or {@code threadFactory} or {@code handler} is null
+     */
+    public ThreadPoolExecutor(int corePoolSize,
+                              int maximumPoolSize,
+                              long keepAliveTime,
+                              TimeUnit unit,
+                              BlockingQueue&lt;Runnable&gt; workQueue,
+                              ThreadFactory threadFactory,
+                              RejectedExecutionHandler handler) 
+</code></pre>
+<p>以上便是java线程池中的最核心的构造方法。现在来讲解其每个参数的意义</p>
+<ol>
+<li>corePoolSize核心线程数，如果线程池中的线程数小于核心线程数当有新的任务需要执行是就会创建一个对象，当线程数量到达核心数，则将新来的任务加入队列中</li>
+<li>maximumPoolSize 最大线程数，当线程数量大于等于核心线程数量，且放置任务的workQueue已满时则会继续新增线程，直至达到maximumPoolSize</li>
+<li>keepAliveTime，unit 这2个参数是配合使用的，当线程数量大于核心线程数量时，如果其中的线程有keepAliveTime+unit的时间是空闲的则会干掉改线程</li>
+<li>workQueue 用于存放任务的阻塞队列，当核心线程数达到最大时，如果新进来了任务则会加入到这个阻塞队列</li>
+<li>threadFactory，用于生产线程的工厂，你可以自定义一个工厂，线程名字自定义</li>
+<li>RejectedExecutionHandler 任务的拒绝策略，当线程数到达最大且阻塞队列也满了的时候就会采用这个策略对新进来的任务进行出来，<strong>上次生产事故，就是 由于拒绝策略不当而导致</strong></li>
+</ol>
+<h3 id="任务调度流程">任务调度流程</h3>
+<figure data-type="image" tabindex="1"><img src="https://whg001.github.io/post-images/1626512162952.png" alt="" loading="lazy"></figure>
+<p>结合上图与构造函数，我相信这个主要流程你已经清楚了</p>
+<h3 id="数据结构">数据结构</h3>
+<figure data-type="image" tabindex="2"><img src="https://whg001.github.io/post-images/1626512324354.png" alt="" loading="lazy"></figure>
+<p><strong>线程池在内部实际上构建了一个生产者消费者模型，将线程和任务两者解耦，并不直接关联</strong>，从而良好的缓冲任务，复用线程。线程池的运行主要分成两部分：任务管理、线程管理。任务管理部分充当生产者的角色，当任务提交后，线程池会判断该任务后续的流转：<br>
+（1）直接申请线程执行该任务；<br>
+（2）缓冲到队列中等待线程执行；<br>
+（3）拒绝该任务。线程管理部分是消费者，它们被统一维护在线程池内，根据任务请求进行线程的分配，当线程执行完任务后则会继续获取新的任务去执行，最终当线程获取不到任务的时候，线程就会被回收。</p>
+<h2 id="其提供的创建线程池的几种方法">其提供的创建线程池的几种方法</h2>
+<p>jdk默认提供的方法不好意思都不建议使用在此在说一说他们缺点</p>
+<pre><code class="language-java">    public static ExecutorService newFixedThreadPool(int nThreads) {
+        return new ThreadPoolExecutor(nThreads, nThreads,
+                                      0L, TimeUnit.MILLISECONDS,
+                                      new LinkedBlockingQueue&lt;Runnable&gt;());
+    }
+</code></pre>
+<p>由构造函数可以看出，他的队列无限大，会引发oom</p>
+<pre><code class="language-java">    public static ExecutorService newCachedThreadPool() {
+        return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                                      60L, TimeUnit.SECONDS,
+                                      new SynchronousQueue&lt;Runnable&gt;());
+    }
+</code></pre>
+<p>线程数太大也会oom</p>
+<h2 id="拒绝策略">拒绝策略</h2>
+<p>可以自定义拒绝策略实现RejectedExecutionHandler即可，在此主要说一说jdk自带的拒绝方法</p>
+<ol>
+<li>DiscardPolicy（丢弃策略），直接丢弃</li>
+<li>DiscardOldestPolicy（弃老策略），丢弃队列中最靠前的，随后将新任务加入其中</li>
+<li>AbortPolicy（拒绝并抛出异常）</li>
+<li>CallerRunsPolicy，此方法由调用者线程进行执行，通常只有<strong>很重要的方法才会使用这个</strong></li>
+</ol>
+<h2 id="生产中线程池使用不当">生产中线程池使用不当</h2>
+<h3 id="场景">场景</h3>
+<p>​	支付事业部生产环境，突然所有访问超时，机器中一个节点处理不了任何请求，而且对应mysql的机器访问全部超时。瘫痪长达半个小时</p>
+<h3 id="排查">排查</h3>
+<p>​	每个人员排查自己所负责的组件发现，kafka假死。为何kafka假死会出现这么严重的问题。</p>
+<p>​	排查代码发现代码逻辑大概如下，由于监控需求需要把一些数据发入kafka。于是工作人员在写入数据库之后的事务中，使用了异步线程池，异步线程池做的事就是将数据发送至kafka，异步线程池中所使用的策略为CallerRunsPolicy。</p>
+<h3 id="原因分析">原因分析</h3>
+<ol>
+<li>此场景中，线程池的策略为CallerRunsPolicy，当kafka阻塞时，线程池拉满，由调用线程来执行，导致tomcat中线程拉满，此节点接受不了任何请求了</li>
+<li>分布式事务中，开始了mysql的事务但是kafka一直阻塞，导致mysql连接与资源一直被占用且拉满。于是长事务导致mysql资源基本耗尽<img src="https://whg001.github.io/post-images/1626513981543.png" alt="" loading="lazy"></li>
+</ol>
+<p>最后奉上美团的分享<br>
+https://tech.meituan.com/2020/04/02/java-pooling-pratice-in-meituan.html</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5">基本概念</a>
+<ul>
+<li><a href="#%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E8%AE%B2%E8%A7%A3">构造函数讲解</a></li>
+<li><a href="#%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6%E6%B5%81%E7%A8%8B">任务调度流程</a></li>
+<li><a href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84">数据结构</a></li>
+</ul>
+</li>
+<li><a href="#%E5%85%B6%E6%8F%90%E4%BE%9B%E7%9A%84%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E6%B3%95">其提供的创建线程池的几种方法</a></li>
+<li><a href="#%E6%8B%92%E7%BB%9D%E7%AD%96%E7%95%A5">拒绝策略</a></li>
+<li><a href="#%E7%94%9F%E4%BA%A7%E4%B8%AD%E7%BA%BF%E7%A8%8B%E6%B1%A0%E4%BD%BF%E7%94%A8%E4%B8%8D%E5%BD%93">生产中线程池使用不当</a>
+<ul>
+<li><a href="#%E5%9C%BA%E6%99%AF">场景</a></li>
+<li><a href="#%E6%8E%92%E6%9F%A5">排查</a></li>
+<li><a href="#%E5%8E%9F%E5%9B%A0%E5%88%86%E6%9E%90">原因分析</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/hong-hei-shu-ding-yi/">
+              <h3 class="post-title">
+                红黑树定义
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
