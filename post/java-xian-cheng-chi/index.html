@@ -3,7 +3,7 @@
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>java线程池 | haogui</title>
-<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1626514063249">
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1626514439155">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
 <link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
 <link rel="alternate" type="application/atom+xml" title="java线程池 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
@@ -23,7 +23,7 @@
       <div class="main-content">
         <div class="site-header">
   <a href="https://whg001.github.io">
-  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1626514063249" alt="">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1626514439155" alt="">
   </a>
   <h1 class="site-title">
     haogui
@@ -191,6 +191,7 @@
 <p>​	排查代码发现代码逻辑大概如下，由于监控需求需要把一些数据发入kafka。于是工作人员在写入数据库之后的事务中，使用了异步线程池，异步线程池做的事就是将数据发送至kafka，异步线程池中所使用的策略为CallerRunsPolicy。</p>
 <h3 id="原因分析">原因分析</h3>
 <ol>
+<li>对于不重要的业务，不建议使用分布式事务</li>
 <li>此场景中，线程池的策略为CallerRunsPolicy，当kafka阻塞时，线程池拉满，由调用线程来执行，导致tomcat中线程拉满，此节点接受不了任何请求了</li>
 <li>分布式事务中，开始了mysql的事务但是kafka一直阻塞，导致mysql连接与资源一直被占用且拉满。于是长事务导致mysql资源基本耗尽</li>
 </ol>
