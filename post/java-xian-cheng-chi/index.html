@@ -3,7 +3,7 @@
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>java线程池 | haogui</title>
-<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1626513994703">
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1626514063249">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
 <link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
 <link rel="alternate" type="application/atom+xml" title="java线程池 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
@@ -23,7 +23,7 @@
       <div class="main-content">
         <div class="site-header">
   <a href="https://whg001.github.io">
-  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1626513994703" alt="">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1626514063249" alt="">
   </a>
   <h1 class="site-title">
     haogui
@@ -95,6 +95,8 @@
                 </a>
               
             </div>
+            
+              <img class="post-feature-image" src="https://whg001.github.io/post-images/java-xian-cheng-chi.png" alt="">
             
             <div class="post-content-wrapper">
               <div class="post-content">
@@ -190,7 +192,7 @@
 <h3 id="原因分析">原因分析</h3>
 <ol>
 <li>此场景中，线程池的策略为CallerRunsPolicy，当kafka阻塞时，线程池拉满，由调用线程来执行，导致tomcat中线程拉满，此节点接受不了任何请求了</li>
-<li>分布式事务中，开始了mysql的事务但是kafka一直阻塞，导致mysql连接与资源一直被占用且拉满。于是长事务导致mysql资源基本耗尽<img src="https://whg001.github.io/post-images/1626513981543.png" alt="" loading="lazy"></li>
+<li>分布式事务中，开始了mysql的事务但是kafka一直阻塞，导致mysql连接与资源一直被占用且拉满。于是长事务导致mysql资源基本耗尽</li>
 </ol>
 <p>最后奉上美团的分享<br>
 https://tech.meituan.com/2020/04/02/java-pooling-pratice-in-meituan.html</p>
