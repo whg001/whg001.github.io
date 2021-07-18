@@ -1,0 +1,291 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ping与http 面试题 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1626599075688">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="ping与http 面试题 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="上一次听了我同事面试腾讯的录音，里面有一个关于计算机网络的题目，比较有意思，在此说一下个人理解，不一定正确哈，如果有错误请大佬们在留言区，赐教
+题目
+
+一台机器ping一台机器，耗时100ms，如果在浏览器中访问这台机器的web服务将会耗时..." />
+    <meta name="keywords" content="计算机网络,面试" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1626599075688" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/huan-cun" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              ping与http 面试题
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-07-18
+              </span>
+              <span>
+                4 min read
+              </span>
+              
+                <a href="https://whg001.github.io/tag/tn4Qmi_gv/" class="post-tag">
+                  # 计算机网络
+                </a>
+              
+                <a href="https://whg001.github.io/tag/AKBQ_fHnE/" class="post-tag">
+                  # 面试
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="/post-images/ping-yu-http-mian-shi-ti.png" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <p>上一次听了我同事面试腾讯的录音，里面有一个关于计算机网络的题目，比较有意思，在此说一下个人理解，不一定正确哈，如果有错误请大佬们在留言区，赐教</p>
+<h2 id="题目">题目</h2>
+<blockquote>
+<p>一台机器ping一台机器，耗时100ms，如果在浏览器中访问这台机器的web服务将会耗时多久，或者至少是多少倍。</p>
+</blockquote>
+<p>一听确实被吓了一跳，还能这样计算时间嘛</p>
+<h2 id="分析过程">分析过程</h2>
+<p>我第一反应，虽然不知道耗时，扯一扯分析的逻辑总没问题。<br>
+首先ping是测试2台机器网络是否连通，属于网络层协议</p>
+<blockquote>
+<p>ping 是基于<em>ICMP</em>协议工作的。ICMP 全称 <strong>Internet Control Message Protocol</strong>，就是互联网控制报文协议，网络层协议。</p>
+</blockquote>
+<p>一次ping，其实就相当于一次RTT(返时延)。<br>
+问题转换一次从浏览器访问服务器的需要多少次RTT。<br>
+浏览器访问，一个web服务有哪些过程呢？<br>
+首先这个肯定是http，或者https 应用层协议，为了方便假设是http，http下面还有传输层协议tcp协议。<br>
+由于第一次tcp连接，那么肯定是要三次握手，这个耗时不能免</p>
+<h3 id="tcp">tcp</h3>
+<figure data-type="image" tabindex="1"><img src="https://whg001.github.io/post-images/1626594819863.png" alt="" loading="lazy"></figure>
+<p>如上提所示建立连接</p>
+<ol>
+<li>客户端先发送：SYN，seq=x，给服务器</li>
+<li>随后服务器作出相应：SYN，ack=x+1，seq=y</li>
+<li>客户端再发送ACK，seq=x+1，ack=y+1</li>
+</ol>
+<p>其中的响应阶段对应了，tcp中的状态，当客户端发送了ACK时，他就已经变成了ESTABLISHED，就可以发送数据到服务器去了，所以也就是消耗了一次RTT的时间建立tcp连接。<br>
+建立了tcp连接后，就可以发送数据给服务器。</p>
+<p>如果是http通信则可以推断一定是大于2倍ping的时间。<br>
+<img src="https://whg001.github.io/post-images/1626597159518.png" alt="" loading="lazy"></p>
+<p>但是如果是https，那可就又复杂了</p>
+<h3 id="https首次请求">https首次请求</h3>
+<figure data-type="image" tabindex="2"><img src="https://whg001.github.io/post-images/1626597923044.png" alt="" loading="lazy"></figure>
+<p>HTTPS首次请求需要的网络耗时解释如下：</p>
+<p>三次握手建立TCP连接。耗时一个RTT。</p>
+<p>使用HTTP发起GET请求，服务端返回302跳转到https://。需要一个RTT以及302跳转延时。</p>
+<blockquote>
+<p>大部分情况下用户不会手动输入https://来访问HTTPS，服务端只能返回302强制浏览器跳转到HTTPS。</p>
+</blockquote>
+<blockquote>
+<p>浏览器处理302跳转也需要耗时。</p>
+</blockquote>
+<p>三次握手重新建立TCP连接。耗时一个RTT。</p>
+<blockquote>
+<p>302跳转到HTTPS服务器之后，由于端口和服务器不同，需要重新完成三次握手，建立TCP连接。</p>
+</blockquote>
+<p>TLS完全握手阶段一。耗时至少一个RTT。</p>
+<blockquote>
+<p>这个阶段主要是完成加密套件的协商和证书的身份认证。</p>
+</blockquote>
+<blockquote>
+<p>服务端和浏览器会协商出相同的密钥交换算法、对称加密算法、内容一致性校验算法、证书签名算法、椭圆曲线（非ECC算法不需要）等。</p>
+</blockquote>
+<blockquote>
+<p>浏览器获取到证书后需要校验证书的有效性，比如是否过期，是否撤销。</p>
+</blockquote>
+<p>解析CA站点的DNS。耗时一个RTT。</p>
+<blockquote>
+<p>浏览器获取到证书后，有可能需要发起OCSP或者CRL请求，查询证书状态。</p>
+</blockquote>
+<blockquote>
+<p>浏览器首先获取证书里的CA域名。</p>
+</blockquote>
+<blockquote>
+<p>如果没有命中缓存，浏览器需要解析CA域名的DNS。</p>
+</blockquote>
+<p>三次握手建立CA站点的TCP连接。耗时一个RTT。</p>
+<blockquote>
+<p>DNS解析到IP后，需要完成三次握手建立TCP连接。</p>
+</blockquote>
+<p>发起OCSP请求，获取响应。耗时一个RTT。</p>
+<p>完全握手阶段二，耗时一个RTT及计算时间。</p>
+<p>完全握手阶段二主要是密钥协商。</p>
+<blockquote>
+<p>完全握手结束后，浏览器和服务器之间进行应用层（也就是HTTP）数据传输。</p>
+</blockquote>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E9%A2%98%E7%9B%AE">题目</a></li>
+<li><a href="#%E5%88%86%E6%9E%90%E8%BF%87%E7%A8%8B">分析过程</a>
+<ul>
+<li><a href="#tcp">tcp</a></li>
+<li><a href="#https%E9%A6%96%E6%AC%A1%E8%AF%B7%E6%B1%82">https首次请求</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/java-xian-cheng-chi/">
+              <h3 class="post-title">
+                java线程池
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

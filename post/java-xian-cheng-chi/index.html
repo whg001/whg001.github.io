@@ -3,7 +3,7 @@
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>java线程池 | haogui</title>
-<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1626569582216">
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1626599075688">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
 <link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
 <link rel="alternate" type="application/atom+xml" title="java线程池 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
@@ -23,7 +23,7 @@
       <div class="main-content">
         <div class="site-header">
   <a href="https://whg001.github.io">
-  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1626569582216" alt="">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1626599075688" alt="">
   </a>
   <h1 class="site-title">
     haogui
@@ -188,7 +188,7 @@
 <p>​	支付事业部生产环境，突然所有访问超时，机器中一个节点处理不了任何请求，而且对应mysql的机器访问全部超时。瘫痪长达半个小时</p>
 <h3 id="排查">排查</h3>
 <p>​	每个人员排查自己所负责的组件发现，kafka假死。为何kafka假死会出现这么严重的问题。</p>
-<p>​	排查代码发现代码逻辑大概如下，由于监控需求需要把一些数据发入kafka。于是工作人员在写入数据库之后的事务中，使用了异步线程池，异步线程池做的事就是将数据发送至kafka，异步线程池中所使用的策略为CallerRunsPolicy。</p>
+<p>​	排查代码发现代码逻辑大概如下，由于监控需求需要把一些数据发入kafka。于是工作人员在写入数据库之后的事务中，使用了异步线程池，异步的将监控数据加入kafka，异步线程池中所使用的策略为CallerRunsPolicy。</p>
 <h3 id="原因分析">原因分析</h3>
 <ol>
 <li>对于不重要的业务，不建议使用分布式事务</li>
