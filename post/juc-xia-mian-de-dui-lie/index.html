@@ -3,7 +3,7 @@
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>JUC下面的队列 | haogui</title>
-<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1626699123820">
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1626704942857">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
 <link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
 <link rel="alternate" type="application/atom+xml" title="JUC下面的队列 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
@@ -29,7 +29,7 @@ Concurrent 类型基于 lock-fr..." />
       <div class="main-content">
         <div class="site-header">
   <a href="https://whg001.github.io">
-  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1626699123820" alt="">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1626704942857" alt="">
   </a>
   <h1 class="site-title">
     haogui
@@ -125,7 +125,8 @@ CopyOnWrite 在修改或者新增元素时会复制一份数据进行修改。</
 <li>弱一致性的另外一个体现是，size 等操作准确性是有限的，未必是 100% 准确。</li>
 <li>与此同时，读取的性能具有一定的不确定性。</li>
 </ul>
-<figure data-type="image" tabindex="1"><img src="https://whg001.github.io/post-images/1626696181849.jpg" alt="" loading="lazy"></figure>
+<p><img src="https://whg001.github.io/post-images/1626696181849.jpg" alt="" loading="lazy"><br>
+奉上一个继承实现图</p>
 <h2 id="分析">分析</h2>
 <h3 id="blocking优势">Blocking优势</h3>
 <p>其实个人觉得在生产者消费者模式中使用阻塞队列是比较合适的。当队列里面没有数据时如果还有线程在take，他能帮他阻塞线程，防止cpu空转。</p>
