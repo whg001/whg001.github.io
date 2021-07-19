@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://whg001.github.io</id>
     <title>haogui</title>
-    <updated>2021-07-19T03:16:45.664Z</updated>
+    <updated>2021-07-19T11:48:24.293Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://whg001.github.io"/>
     <link rel="self" href="https://whg001.github.io/atom.xml"/>
@@ -10,6 +10,13 @@
     <logo>https://whg001.github.io/images/avatar.png</logo>
     <icon>https://whg001.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, haogui</rights>
+    <entry>
+        <title type="html"><![CDATA[JUC下面的队列]]></title>
+        <id>https://whg001.github.io/post/juc-xia-mian-de-dui-lie/</id>
+        <link href="https://whg001.github.io/post/juc-xia-mian-de-dui-lie/">
+        </link>
+        <updated>2021-07-19T03:18:07.000Z</updated>
+    </entry>
     <entry>
         <title type="html"><![CDATA[ping与http 面试题]]></title>
         <id>https://whg001.github.io/post/ping-yu-http-mian-shi-ti/</id>

@@ -2,18 +2,18 @@
   <head>
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Atomic累加原理 | haogui</title>
+<title>JUC下面的队列 | haogui</title>
 <link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1626695297396">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
 <link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
-<link rel="alternate" type="application/atom+xml" title="Atomic累加原理 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="alternate" type="application/atom+xml" title="JUC下面的队列 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
 
 
 
-    <meta name="description" content="Atomic是如何保证累加的原子性。翻阅过源码的都晓得里面是使用unsafe这个魔术类，Unsafe提供的API大致可分为内存操作、CAS、Class相关、对象操作、线程调度、系统信息获取、内存屏障、数组操作等几类。
-今天重点在讲他的cas..." />
-    <meta name="keywords" content="原创,java" />
+    <meta name="description" content="本文来聊一聊JUC下面的并发容器。
+" />
+    <meta name="keywords" content="" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
     <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
   </head>
@@ -75,71 +75,25 @@
         <div class="post-detail">
           <article class="post">
             <h2 class="post-title">
-              Atomic累加原理
+              JUC下面的队列
             </h2>
             <div class="post-info">
               <span>
-                2021-07-16
+                2021-07-19
               </span>
               <span>
-                2 min read
+                1 min read
               </span>
-              
-                <a href="https://whg001.github.io/tag/qCSWQaDUs/" class="post-tag">
-                  # 原创
-                </a>
-              
-                <a href="https://whg001.github.io/tag/PNv5KdDzK/" class="post-tag">
-                  # java
-                </a>
               
             </div>
             
-              <img class="post-feature-image" src="https://whg001.github.io/post-images/atomic-lei-jia-yuan-li.png" alt="">
-            
             <div class="post-content-wrapper">
               <div class="post-content">
-                <p>Atomic是如何保证累加的原子性。翻阅过源码的都晓得里面是使用unsafe这个魔术类，Unsafe提供的API大致可分为内存操作、CAS、Class相关、对象操作、线程调度、系统信息获取、内存屏障、数组操作等几类。<br>
-今天重点在讲他的cas</p>
-<h2 id="什么是cas">什么是CAS?</h2>
-<p>即比较并替换，实现并发算法时常用到的一种技术。CAS操作包含三个操作数——内存位置、预期原值及新值。执行CAS操作的时候，将内存位置的值与预期原值比较，如果相匹配，那么处理器会自动将该位置值更新为新值，否则，处理器不做任何操作。我们都知道，<strong>CAS是一条CPU的原子指令（cmpxchg指令），不会造成所谓的数据不一致问题，Unsafe提供的CAS方法（如compareAndSwapXXX）底层实现即为CPU指令cmpxchg。</strong></p>
-<h2 id="atomic的累加如何实现原子性">atomic的累加如何实现原子性</h2>
-<p>通过cas我们能保证设值值的原子性</p>
-<p><strong>AtomicLong源代码</strong></p>
-<pre><code class="language-java">
-    /**
-     * Atomically increments by one the current value.
-     *
-     * @return the updated value
-     */
-    public final long incrementAndGet() {
-        return unsafe.getAndAddLong(this, valueOffset, 1L) + 1L;
-    }
-</code></pre>
-<p>如上所示他是使用了unsafe的getAndAddLong进行直接加1，那我们接着看getAndAddLong源代码</p>
-<p><strong>unsafe源码</strong></p>
-<pre><code class="language-java">public final int getAndAddInt(Object var1, long var2, int var4) {
-        int var5;
-        do {
-            var5 = this.getIntVolatile(var1, var2);
-        } while(!this.compareAndSwapInt(var1, var2, var5, var5 + var4));
-
-        return var5;
-    }
-</code></pre>
-<p>如上代码所示，他是通过了一个while的循环一直进行cas，直到他在原来的value上累加成功了一次，才会退出循环。因为很有可能在你cas的时候，别人已经进行过一次累加，导致你的期望值发生的变动于是cas失败，导致累加失败，而这个while循环就能保证直到这一次累加成功</p>
+                <p>本文来聊一聊JUC下面的并发容器。</p>
 
               </div>
               <div class="toc-container">
-                <ul class="markdownIt-TOC">
-<li>
-<ul>
-<li><a href="#%E4%BB%80%E4%B9%88%E6%98%AFcas">什么是CAS?</a></li>
-<li><a href="#atomic%E7%9A%84%E7%B4%AF%E5%8A%A0%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%8E%9F%E5%AD%90%E6%80%A7">atomic的累加如何实现原子性</a></li>
-</ul>
-</li>
-</ul>
-
+                
               </div>
             </div>
           </article>
@@ -148,9 +102,9 @@
         
           <div class="next-post">
             <div class="next">下一篇</div>
-            <a href="https://whg001.github.io/post/futureforkjoin-shi-xian-yuan-li/">
+            <a href="https://whg001.github.io/post/ping-yu-http-mian-shi-ti/">
               <h3 class="post-title">
-                 future，forkjoin实现原理
+                ping与http 面试题
               </h3>
             </a>
           </div>
