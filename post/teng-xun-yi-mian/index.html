@@ -1,0 +1,248 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>面试 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1628387023705">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="面试 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="腾讯一面
+
+算法题四道：String转int(O(n))，数组实现stack(O(1))，一串数字中出现最多次数的(O(n))，LRU(O(1))
+Spring相关：Spring事务实现，事务的传播性，什么情况失效，  bean的生命周期
+..." />
+    <meta name="keywords" content="面试" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1628387023705" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              面试
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-07-22
+              </span>
+              <span>
+                4 min read
+              </span>
+              
+                <a href="https://whg001.github.io/tag/AKBQ_fHnE/" class="post-tag">
+                  # 面试
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://whg001.github.io/post-images/teng-xun-yi-mian.png" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h3 id="腾讯一面">腾讯一面</h3>
+<ul>
+<li>算法题四道：String转int(O(n))，数组实现stack(O(1))，一串数字中出现最多次数的(O(n))，LRU(O(1))</li>
+<li>Spring相关：Spring事务实现，事务的传播性，什么情况失效，  bean的生命周期</li>
+<li>锁相关问题，cas相关问题，容器数据结构相关基础问题，jvm相关基础问题</li>
+<li>耗时2小时</li>
+</ul>
+<h3 id="腾讯二面">腾讯二面</h3>
+<ul>
+<li>了解过什么开源项目，请将出优点，画出架构图，他为什么要这么设计，和其他相比有哪些优缺点</li>
+<li>你上个次面试写的环形队列有没有什么bug，这个环形队列在哪些场景是很适用？，如果在高并发场景这个环形队列有哪些问题，请通过编码解决这些问题</li>
+<li>ping的延迟100ms，http访问最少多少？一次http请求，客户端什么时候知道他结束了？http对应状态码的信息，300代表什么，502代表什么</li>
+<li>我说我熟悉redis，问题redis源码(只能尴尬的笑了笑)</li>
+<li>耗时一个半小时</li>
+</ul>
+<h3 id="腾讯三面">腾讯三面</h3>
+<ul>
+<li>手写一个二维的随机地图，类似于扫雷的地图。给出行号，列号，雷的个数，要求随机。写完后没要你运行目测bug(bug是随机的碰撞)。自己看出bug后改，随后问时间复杂度，最好的时间复杂度，最坏的时间复杂度，平均时间复杂度。再问优化如何降低你的时间复杂度(我的思考是从减少随机碰撞，将其用linkList优化，但时间复杂度并没有好的转变)。问其他排序算法的时间复杂度(最好，最坏，平均)。</li>
+<li>tcp与udp的区别，编写过网络代码嘛，实现过udp，tcp的网络通信嘛，udp客户端如何确定包已经接受完</li>
+<li>你觉得go，python，java 他们之间的优劣。java在编写web方面和python比哪个更好？我想必定是java巴拉巴拉说了一些，面试官反问了一句，你知道豆瓣和知乎是python写的嘛。你用python感觉到他编写时与java的哪些不同，他的优点是什么？他的内存模型是什么？(内存模型答不下去了，下一个话题)</li>
+<li>说一下java虚拟机的内存区域，随后以你写的算法为例，说出你写的代码里面对象，方法，类，局部变量存放在哪些区域。java对象一定在堆里面嘛？(回答不一定，有逃逸分析)，谈一谈逃逸分析(忘了具体了)</li>
+<li>熟悉redis嘛，我说还可以，我要将其内存扩容(尬住)。我说只是熟悉其数据结构。问题了解zset吗？说一说其数据结构(跳表)，为什么不用树，优缺点</li>
+<li>有没有写博客习惯，我把我的笔记给面试官看了(面试官建议我放在github，不然本地出现问题就会丢失)</li>
+<li>面试官点评，计算机网络那块明显不够，推荐我去看几本书(书籍放在最后)</li>
+<li>耗时一个多小时，体验感超级好</li>
+</ul>
+<h3 id="四面">四面</h3>
+<ul>
+<li>这一轮是人事面，耗时一个小时</li>
+</ul>
+<p>总结起来，计算机网络比较差，基本都折在计算机网络。侥幸，面试全部划过去了<br>
+<strong>自顶向下计算机网络</strong> ---推荐<br>
+<strong>unix网络编程</strong>  ---推荐设计原理，实践<br>
+<strong>深入理解计算机系统</strong>  --组成原理相关</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#%E8%85%BE%E8%AE%AF%E4%B8%80%E9%9D%A2">腾讯一面</a></li>
+<li><a href="#%E8%85%BE%E8%AE%AF%E4%BA%8C%E9%9D%A2">腾讯二面</a></li>
+<li><a href="#%E8%85%BE%E8%AE%AF%E4%B8%89%E9%9D%A2">腾讯三面</a></li>
+<li><a href="#%E5%9B%9B%E9%9D%A2">四面</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/juc-xia-mian-de-dui-lie/">
+              <h3 class="post-title">
+                JUC下面的队列
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
