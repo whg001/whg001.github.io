@@ -3,7 +3,7 @@
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>面试 | haogui</title>
-<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1628387023705">
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1628387347958">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
 <link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
 <link rel="alternate" type="application/atom+xml" title="面试 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
@@ -25,7 +25,7 @@ Spring相关：Spring事务实现，事务的传播性，什么情况失效，  
       <div class="main-content">
         <div class="site-header">
   <a href="https://whg001.github.io">
-  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1628387023705" alt="">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1628387347958" alt="">
   </a>
   <h1 class="site-title">
     haogui
@@ -85,7 +85,7 @@ Spring相关：Spring事务实现，事务的传播性，什么情况失效，  
                 2021-07-22
               </span>
               <span>
-                4 min read
+                5 min read
               </span>
               
                 <a href="https://whg001.github.io/tag/AKBQ_fHnE/" class="post-tag">
@@ -128,10 +128,29 @@ Spring相关：Spring事务实现，事务的传播性，什么情况失效，  
 <ul>
 <li>这一轮是人事面，耗时一个小时</li>
 </ul>
-<p>总结起来，计算机网络比较差，基本都折在计算机网络。侥幸，面试全部划过去了<br>
-<strong>自顶向下计算机网络</strong> ---推荐<br>
+<p>总结起来，计算机网络比较差，基本都折在计算机网络。侥幸，面试全部划过去了</p>
+<p><strong>自顶向下计算机网络</strong> ---推荐<br>
 <strong>unix网络编程</strong>  ---推荐设计原理，实践<br>
 <strong>深入理解计算机系统</strong>  --组成原理相关</p>
+<h4 id="http如何确定发送完成">http如何确定发送完成</h4>
+<p>http如何确定请求已经发送完毕</p>
+<p>https://blog.piaoruiqing.com/2019/09/08/do-you-know-content-length/</p>
+<ol>
+<li>
+<p>对于有content-length 来确定大小，如果实际发送的大小与content-length不相符，则会出bug</p>
+<ul>
+<li>
+<p>如果Content-Length比实际的长度大, 服务端/客户端读取到消息结尾后, 会等待下一个字节, 自然会无响应直到超时.</p>
+</li>
+<li>
+<p>如果Content-Length比实际的长度小首次请求的消息会被截取</p>
+</li>
+</ul>
+</li>
+</ol>
+<p>Content-Length<code>首部指示出报文中实体主体的字节大小. 但如在请求处理完成前无法获取消息长度, 我们就无法明确指定</code>Content-Length<code>, 此时应该使用</code>Transfer-Encoding: chunked</p>
+<p><strong>什么是Transfer-Encoding: chunked</strong></p>
+<p>数据以一系列分块的形式进行发送. <code>Content-Length</code> 首部在这种情况下不被发送. 在每一个分块的开头需要添加当前分块的长度, 以十六进制的形式表示，后面紧跟着 <code>\r\n</code> , 之后是分块本身, 后面也是<code>\r\n</code>. 终止块是一个常规的分块, 不同之处在于其长度为0.</p>
 
               </div>
               <div class="toc-container">
@@ -143,7 +162,11 @@ Spring相关：Spring事务实现，事务的传播性，什么情况失效，  
 <li><a href="#%E8%85%BE%E8%AE%AF%E4%B8%80%E9%9D%A2">腾讯一面</a></li>
 <li><a href="#%E8%85%BE%E8%AE%AF%E4%BA%8C%E9%9D%A2">腾讯二面</a></li>
 <li><a href="#%E8%85%BE%E8%AE%AF%E4%B8%89%E9%9D%A2">腾讯三面</a></li>
-<li><a href="#%E5%9B%9B%E9%9D%A2">四面</a></li>
+<li><a href="#%E5%9B%9B%E9%9D%A2">四面</a>
+<ul>
+<li><a href="#http%E5%A6%82%E4%BD%95%E7%A1%AE%E5%AE%9A%E5%8F%91%E9%80%81%E5%AE%8C%E6%88%90">http如何确定发送完成</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
