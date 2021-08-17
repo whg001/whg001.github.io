@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://whg001.github.io</id>
     <title>haogui</title>
-    <updated>2021-08-08T01:51:43.546Z</updated>
+    <updated>2021-08-17T09:07:29.480Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://whg001.github.io"/>
     <link rel="self" href="https://whg001.github.io/atom.xml"/>
@@ -10,6 +10,13 @@
     <logo>https://whg001.github.io/images/avatar.png</logo>
     <icon>https://whg001.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, haogui</rights>
+    <entry>
+        <title type="html"><![CDATA[传统spring-mvc中的filter进行自动注入]]></title>
+        <id>https://whg001.github.io/post/chuan-tong-spring-mvc-zhong-de-filter-jin-xing-zi-dong-zhu-ru/</id>
+        <link href="https://whg001.github.io/post/chuan-tong-spring-mvc-zhong-de-filter-jin-xing-zi-dong-zhu-ru/">
+        </link>
+        <updated>2021-08-17T09:05:55.000Z</updated>
+    </entry>
     <entry>
         <title type="html"><![CDATA[限流器]]></title>
         <id>https://whg001.github.io/post/xian-liu-qi/</id>
@@ -72,12 +79,5 @@
         <link href="https://whg001.github.io/post/futureforkjoin-shi-xian-yuan-li/">
         </link>
         <updated>2021-07-14T14:00:26.000Z</updated>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[ClassLoad解决问题场景]]></title>
-        <id>https://whg001.github.io/post/classload-jie-jue-wen-ti-chang-jing/</id>
-        <link href="https://whg001.github.io/post/classload-jie-jue-wen-ti-chang-jing/">
-        </link>
-        <updated>2021-07-04T12:30:31.000Z</updated>
     </entry>
 </feed>
