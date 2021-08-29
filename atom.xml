@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://whg001.github.io</id>
     <title>haogui</title>
-    <updated>2021-08-18T00:11:59.704Z</updated>
+    <updated>2021-08-29T03:01:01.060Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://whg001.github.io"/>
     <link rel="self" href="https://whg001.github.io/atom.xml"/>
@@ -10,6 +10,13 @@
     <logo>https://whg001.github.io/images/avatar.png</logo>
     <icon>https://whg001.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, haogui</rights>
+    <entry>
+        <title type="html"><![CDATA[算法题]]></title>
+        <id>https://whg001.github.io/post/suan-fa-ti/</id>
+        <link href="https://whg001.github.io/post/suan-fa-ti/">
+        </link>
+        <updated>2021-08-29T02:28:17.000Z</updated>
+    </entry>
     <entry>
         <title type="html"><![CDATA[传统spring-mvc中的filter进行自动注入]]></title>
         <id>https://whg001.github.io/post/chuan-tong-spring-mvc-zhong-de-filter-jin-xing-zi-dong-zhu-ru/</id>
@@ -72,12 +79,5 @@
         <link href="https://whg001.github.io/post/atomic-lei-jia-yuan-li/">
         </link>
         <updated>2021-07-16T12:30:21.000Z</updated>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[ future，forkjoin实现原理]]></title>
-        <id>https://whg001.github.io/post/futureforkjoin-shi-xian-yuan-li/</id>
-        <link href="https://whg001.github.io/post/futureforkjoin-shi-xian-yuan-li/">
-        </link>
-        <updated>2021-07-14T14:00:26.000Z</updated>
     </entry>
 </feed>

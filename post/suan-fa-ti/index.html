@@ -1,0 +1,372 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>算法题 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1630206057277">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="算法题 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="与树相关的数据题，在此看一到ali的笔试题
+
+附上自己编写的代码
+
+/**
+ * @author whg
+ * @date 2021/7/24 7:49 下午
+ **/
+public class Tree {
+
+    private Li..." />
+    <meta name="keywords" content="面试,算法" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1630206057277" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              算法题
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-08-29
+              </span>
+              <span>
+                4 min read
+              </span>
+              
+                <a href="https://whg001.github.io/tag/AKBQ_fHnE/" class="post-tag">
+                  # 面试
+                </a>
+              
+                <a href="https://whg001.github.io/tag/7bwdLHTOV/" class="post-tag">
+                  # 算法
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://whg001.github.io/post-images/suan-fa-ti.jpeg" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <p>与树相关的数据题，在此看一到ali的笔试题<br>
+<img src="https://whg001.github.io/post-images/1630204251944.png" alt="" loading="lazy"></p>
+<p>附上自己编写的代码</p>
+<pre><code class="language-java">
+/**
+ * @author whg
+ * @date 2021/7/24 7:49 下午
+ **/
+public class Tree {
+
+    private List&lt;Node&gt; Node = new ArrayList();
+
+    public List&lt;com.ali.node.Node&gt; getNode() {
+        return Node;
+    }
+
+    public void setNode(List&lt;com.ali.node.Node&gt; node) {
+        Node = node;
+    }
+}
+
+
+/**
+ * @author whg
+ * @date 2021/7/24 7:48 下午
+ **/
+public class Node {
+
+    private String value;
+
+    private List&lt;Node&gt; nodes = new ArrayList&lt;&gt;();
+
+    public Node(String value) {
+        this.value = value;
+    }
+
+    public Node(){
+
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    public List&lt;Node&gt; getNodes() {
+        return nodes;
+    }
+
+    public void setNodes(List&lt;Node&gt; nodes) {
+        this.nodes = nodes;
+    }
+}
+</code></pre>
+<pre><code class="language-java">
+/**
+ * 将
+ * @author whg
+ * @date 2021/7/24 7:56 下午
+ **/
+public class Data2Tree2Json {
+
+    private static Tree tree = new Tree();
+
+    public static void toTree(String[] words){
+        if(words == null){
+            return;
+        }
+
+        //指向当前层级
+        List&lt;Node&gt; nodes = tree.getNode();
+
+        for (int i = 0; i &lt; words.length; i++) {
+            Node node = haveSimpleValue(nodes, words[i]);
+            //没有则加入
+            if(node == null){
+                //记录新节点好向下继续遍历
+                node = add2Nodes(nodes,words[i]);
+            }
+
+            // nodes 转移到下一层
+            nodes = node.getNodes();
+        }
+
+    }
+
+    /**
+     * 判断是否存在一点的节点
+     * @param nodes
+     * @param word
+     * @return
+     */
+    public static Node haveSimpleValue(List&lt;Node&gt; nodes, String word){
+        List&lt;Node&gt; collect = nodes.stream()
+                .filter(node -&gt; node.getValue().equals(word))
+                .collect(Collectors.toList());
+        return  collect.isEmpty() ? null : collect.get(0);
+    }
+
+    /**
+     * 将word加入nodes中
+     * @param nodes
+     * @param word
+     */
+    public static Node add2Nodes(List&lt;Node&gt; nodes, String word){
+        if(nodes == null || word == null){
+            return null;
+        }
+        Node node = new Node(word);
+        nodes.add(node);
+        return node;
+    }
+
+    public static String tree2Json(){
+        List&lt;Node&gt; node = tree.getNode();
+        return &quot;{&quot; + nodes2Json(node) + &quot;}&quot;;
+    }
+
+    /**
+     * 把nodes变成json
+     * @param nodes
+     * @return
+     */
+    public static String nodes2Json(List&lt;Node&gt; nodes){
+        List&lt;String&gt; values = new ArrayList&lt;&gt;();
+        for (int i = 0; i &lt; nodes.size(); i++) {
+            Node node = nodes.get(i);
+            //下一层没有元素则拼接后返回
+            if(node.getNodes().size() == 0){
+                String value = &quot;\&quot;&quot; + node.getValue() + &quot;\&quot;&quot; + &quot;:{}&quot;;
+                values.add(value);
+            }else {
+                values.add(&quot;\&quot;&quot; + node.getValue() + &quot;\&quot;&quot; + &quot;:{&quot; + nodes2Json(node.getNodes()) + &quot;}&quot;);
+            }
+        }
+
+        StringBuilder sb = new StringBuilder();
+        values.forEach(json -&gt;{
+            sb.append(json).append(&quot;,&quot;);
+        });
+        return sb.substring(0,sb.length()-1).toString() ;
+    }
+
+    public static void main(String[] args) {
+        String[] word = new String[]{&quot;中国&quot;,&quot;浙江&quot;,&quot;杭州&quot;};
+        String[] word2 = new String[]{&quot;中国&quot;,&quot;浙江&quot;,&quot;杭州&quot;,&quot;余杭区&quot;};
+        String[] word4 = new String[]{&quot;中国&quot;,&quot;浙江&quot;,&quot;宁波&quot;};
+        String[] word3 = new String[]{&quot;中国&quot;,&quot;广东&quot;};
+        String[] word5 = new String[]{&quot;美国&quot;,&quot;纽约&quot;};
+        toTree(word);
+        toTree(word2);
+        toTree(word3);
+        toTree(word4);
+        toTree(word5);
+        System.out.println(tree2Json());
+    }
+
+}
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/chuan-tong-spring-mvc-zhong-de-filter-jin-xing-zi-dong-zhu-ru/">
+              <h3 class="post-title">
+                传统spring-mvc中的filter进行自动注入
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
