@@ -2,23 +2,20 @@
   <head>
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>红黑树定义 | haogui</title>
+<title>远程debug | haogui</title>
 <link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1630294905143">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
 <link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
-<link rel="alternate" type="application/atom+xml" title="红黑树定义 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="alternate" type="application/atom+xml" title="远程debug | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
 
 
 
-    <meta name="description" content="本文来讲一讲红黑树，但不涉及过多源码，讲究点到为止(个人觉得太抠细节没意思，当然我也没有扣)，领会到奥义就行。
-定义
-这是绕不开的圈子，先说其定义
+    <meta name="description" content="一般情况不建议使用线上debug，因为会影响其他的正常测试与运行。但有时在本地环境中如果有某些场景不好复现测试环境的场景，则可适量使用。
 
-根节点是黑色
-每个叶子结点都是黑色的空节点，也就是说叶子结点不存储数据
-任何相邻的节点不能..." />
-    <meta name="keywords" content="算法" />
+在运行jar的参数上添加 启动参数
+-Xdebug -Xrunjdwp:transport=dt_s..." />
+    <meta name="keywords" content="" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
     <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
   </head>
@@ -80,62 +77,35 @@
         <div class="post-detail">
           <article class="post">
             <h2 class="post-title">
-              红黑树定义
+              远程debug
             </h2>
             <div class="post-info">
               <span>
-                2021-07-17
+                2021-08-30
               </span>
               <span>
-                2 min read
+                1 min read
               </span>
-              
-                <a href="https://whg001.github.io/tag/7bwdLHTOV/" class="post-tag">
-                  # 算法
-                </a>
               
             </div>
             
-              <img class="post-feature-image" src="https://whg001.github.io/post-images/hong-hei-shu-ding-yi.png" alt="">
-            
             <div class="post-content-wrapper">
               <div class="post-content">
-                <p>本文来讲一讲红黑树，但不涉及过多源码，讲究点到为止(个人觉得太抠细节没意思，当然我也没有扣)，领会到奥义就行。</p>
-<h2 id="定义">定义</h2>
-<p>这是绕不开的圈子，先说其定义</p>
+                <p>一般情况不建议使用线上debug，因为会影响其他的正常测试与运行。但有时在本地环境中如果有某些场景不好复现测试环境的场景，则可适量使用。</p>
 <ol>
-<li>根节点是黑色</li>
-<li>每个叶子结点都是黑色的空节点，也就是说叶子结点不存储数据</li>
-<li>任何相邻的节点不能同时是红色，也就是说红色节点会被黑色节点分开</li>
-<li>每个节点，从该节点到达其可达的叶子节点，包含相同的黑色节点(即从某个节点出发，到达叶子节点经过的黑色节点数量一致)</li>
+<li>在运行jar的参数上添加 启动参数<br>
+-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=10099<br>
+address=10099，调试服务器的端口号，客户端用来连接服务器的端口号(冲突会导致程序起不来)。<br>
+在idea中进行如下操作</li>
+<li>在idea中进行如下操作<br>
+选择remote debug，即远程debug<img src="https://whg001.github.io/post-images/1630293865504.jpeg" alt="" loading="lazy"><br>
+随后分别填写服务器的ip，和运行参数中的address=10099的这个端口，即可远程debug<br>
+<img src="https://whg001.github.io/post-images/1630294890189.png" alt="" loading="lazy"></li>
 </ol>
-<h2 id="图示">图示</h2>
-<p>下图是取自别人博客中的图片，去掉了黑色的、空的叶子节点<br>
-<img src="https://whg001.github.io/post-images/1626481538170.jpg" alt="" loading="lazy"></p>
-<p>平衡二叉查找树的初衷，是为了解决二叉查找树因为动态更新导致的性能退化问题。所以，“平衡”的意思可以等价为性能不退化。“近似平衡”就等价为性能不会退化得太严重。</p>
-<p>我们来分析红黑树的搜索效率。<br>
-我们将红色节点从上图中进行删除<br>
-<img src="https://whg001.github.io/post-images/1626481709250.jpg" alt="" loading="lazy"></p>
-<p>你会发现他变成了一颗2,3,4树，那他的查找效率是多大呢？log2n，log3n，log4n 反正呢不回比平衡二叉树log2n慢。<br>
-随后我们加入红色节点，从定义3可知：在红黑树中，红色节点不能相邻，也就是说，有一个红色节点就要至少有一个黑色节点，将它跟其他红色节点隔开。红黑树中包含最多黑色节点的路径不会超过 log2n，所以加入红色节点之后，最长路径不会超过 2log2n，也就是说，红黑树的高度近似 2log2n。<br>
-但其实其查找可能是2log2n，2log3n，2log4n ，所以平均下来速率应该快于平衡二叉树。</p>
-<h2 id="234树">2,3,4树</h2>
-<p>如果真想弄清楚这红黑树是怎么旋转和转变的，建议观看以下文章，在此给大家重定向</p>
-<p>http://itpcb.com/a/104477             ----2,3,4树与红黑树之间的变换</p>
-<p>https://algs4.cs.princeton.edu/33balanced/       ---- 红黑树作者博客</p>
 
               </div>
               <div class="toc-container">
-                <ul class="markdownIt-TOC">
-<li>
-<ul>
-<li><a href="#%E5%AE%9A%E4%B9%89">定义</a></li>
-<li><a href="#%E5%9B%BE%E7%A4%BA">图示</a></li>
-<li><a href="#234%E6%A0%91">2,3,4树</a></li>
-</ul>
-</li>
-</ul>
-
+                
               </div>
             </div>
           </article>
@@ -144,9 +114,9 @@
         
           <div class="next-post">
             <div class="next">下一篇</div>
-            <a href="https://whg001.github.io/post/aqs/">
+            <a href="https://whg001.github.io/post/suan-fa-ti/">
               <h3 class="post-title">
-                AQS
+                树的算法题
               </h3>
             </a>
           </div>
