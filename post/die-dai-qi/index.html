@@ -1,0 +1,406 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>迭代器 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1630983287674">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="迭代器 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="迭代器用于遍历容器， 迭代器模式将集合对象的遍历操作从集合类中拆分出来，放到迭代器类中，让两者的职责更加单一 ，降低其耦合性。对于链表数组进行遍历你可能觉得使用for循环就比较简单，但对于复杂的数据结构(树，图)，自己写代码遍历那可就有点麻..." />
+    <meta name="keywords" content="原创,java" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1630983287674" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              迭代器
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-09-07
+              </span>
+              <span>
+                10 min read
+              </span>
+              
+                <a href="https://whg001.github.io/tag/qCSWQaDUs/" class="post-tag">
+                  # 原创
+                </a>
+              
+                <a href="https://whg001.github.io/tag/PNv5KdDzK/" class="post-tag">
+                  # java
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://whg001.github.io/post-images/die-dai-qi.jpeg" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <p>迭代器用于遍历容器， 迭代器模式将集合对象的遍历操作从集合类中拆分出来，放到迭代器类中，让两者的职责更加单一 ，降低其耦合性。对于链表数组进行遍历你可能觉得使用for循环就比较简单，但对于复杂的数据结构(树，图)，自己写代码遍历那可就有点麻烦，所以迭代器模式一定程度上降低了我们遍历的难度。迭代器重要方法next，hasNext</p>
+<h2 id="java中的abstractlist">java中的AbstractList</h2>
+<p>​	大体上2个重要的内部类<strong>Itr</strong>,<strong>ListItr</strong>。在此通过源码解析一下里面的功能，先自己阅读以下留一个印象，后面会讲解</p>
+<pre><code class="language-java"> private class Itr implements Iterator&lt;E&gt; {
+        /**
+         * Index of element to be returned by subsequent call to next.
+         */
+        int cursor = 0;
+
+        /**
+         * Index of element returned by most recent call to next or
+         * previous.  Reset to -1 if this element is deleted by a call
+         * to remove.
+         */
+        int lastRet = -1;
+
+        /**
+         * The modCount value that the iterator believes that the backing
+         * List should have.  If this expectation is violated, the iterator
+         * has detected concurrent modification.
+         */
+        int expectedModCount = modCount;
+
+        public boolean hasNext() {
+            return cursor != size();
+        }
+
+        public E next() {
+            checkForComodification();
+            try {
+                int i = cursor;
+                E next = get(i);
+                lastRet = i;
+                cursor = i + 1;
+                return next;
+            } catch (IndexOutOfBoundsException e) {
+                checkForComodification();
+                throw new NoSuchElementException();
+            }
+        }
+
+        public void remove() {
+            if (lastRet &lt; 0)
+                throw new IllegalStateException();
+            checkForComodification();
+
+            try {
+                AbstractList.this.remove(lastRet);
+                if (lastRet &lt; cursor)
+                    cursor--;
+                lastRet = -1;
+                expectedModCount = modCount;
+            } catch (IndexOutOfBoundsException e) {
+                throw new ConcurrentModificationException();
+            }
+        }
+
+        final void checkForComodification() {
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+        }
+    }
+</code></pre>
+<h3 id="重要元素">重要元素</h3>
+<p>​	cursor 当前元素的位置，lastRet最近一个访问元素的位置，当他为-1时证明最近访问一个元素已被移除。expectedModCount期望的modCount，modCount是ArrayList中记录数组改变的次数。</p>
+<p>​	为什么要重点提一下这几个元素</p>
+<p>1.迭代器中当你删除和添加元素后，往往会导致遍历的时候回漏掉元素，这样就导致遍历的不准，于是你应该遇到过ConcurrentModificationException()，这就是当你在遍历元素时，容器元素被改变。添加元素有概率会重复遍历一个元素(当你加在他遍历之前时，游标指向了他之前遍历过的元素)，删除元素时会漏掉元素(删掉了遍历过的元素，导致游标指向了下一个未遍历的元素)</p>
+<p>2.为了保证遍历的准确性，杜绝掉这种结果不可预期行为或者未决行为 （就是又可能删除元素后访问可能有问题，可能没问题）， 通常有2中方法，一种是遍历的时候不允许增删元素，另一种是增删元素之后让遍历报错 。由于第一种实现较难你不晓得何时会遍历完成。于是通过在遍历过程中是不允许增加或者删除元素。至于如何实现就需要前面提到过的几个元素。</p>
+<p>源码中的checkForComodification() 方法用于比较是否容器中的元素有变换，若有则抛出异常。细心的可能会发现他也提供了remove()方法，它能够删除即将遍历的下一个元素，但不能连续删除，否则抛出IllegalStateException()，不清楚请仔细看源码</p>
+<p>AbstractList.this.xxxx，表示调用AbstractList类的xxxx方法或者元素，而不是本类的方法或者元素</p>
+<h3 id="linklist的迭代器">LinkList的迭代器</h3>
+<p>方法是一样的遵循迭代器的方法，只不过用Node来代替序列，增加了迭代器中add，remove方法可以在遍历时自由通过此迭代器增加或者删除元素，记住是使用迭代器的add，因为LinkList的add方法没有增加expectedModCount的值</p>
+<pre><code class="language-java">	    private Node&lt;E&gt; lastReturned;
+        private Node&lt;E&gt; next;
+        private int nextIndex;
+        private int expectedModCount = modCount;
+
+public E next() {
+            checkForComodification();
+            if (!hasNext())
+                throw new NoSuchElementException();
+
+            lastReturned = next;
+            next = next.next;
+            nextIndex++;
+            return lastReturned.item;
+        }
+public void add(E e) {
+            checkForComodification();
+            lastReturned = null;
+            if (next == null)
+                linkLast(e);
+            else
+                linkBefore(e, next);
+            nextIndex++;
+            expectedModCount++;
+        }
+
+public void remove() {
+            checkForComodification();
+            if (lastReturned == null)
+                throw new IllegalStateException();
+
+            Node&lt;E&gt; lastNext = lastReturned.next;
+            unlink(lastReturned);
+            if (next == lastReturned)
+                next = lastNext;
+            else
+                nextIndex--;
+            lastReturned = null;
+            expectedModCount++;
+        }
+</code></pre>
+<p>个人觉得在linkList遍历过程中删除元素，不会造成重复读，或者漏读，但是如果在遍历过程不是通过迭代器修改了他还是会抛出ConcurrentModificationException，相比ArrayList,他能够用迭代器一直加元素了。</p>
+<h2 id="hashmap">HashMap</h2>
+<p>​	hashMap的迭代器一个重要类HashIterator,更具map的遍历方式你应该也能想到他会有一个迭代器 KeyIterator，ValueIterator，EntryIterator。其遍历的方式是根据其数据结构决定桶加链表(红黑树)。源码之下无密码我们来瞧一瞧吧</p>
+<pre><code class="language-java">abstract class HashIterator {
+        Node&lt;K,V&gt; next;        // next entry to return
+        Node&lt;K,V&gt; current;     // current entry
+        int expectedModCount;  // for fast-fail
+        int index;             // current slot
+
+        HashIterator() {
+            expectedModCount = modCount;
+            Node&lt;K,V&gt;[] t = table;
+            current = next = null;
+            index = 0;
+            if (t != null &amp;&amp; size &gt; 0) { // advance to first entry
+                do {} while (index &lt; t.length &amp;&amp; (next = t[index++]) == null);
+            }
+        }
+
+        public final boolean hasNext() {
+            return next != null;
+        }
+
+        final Node&lt;K,V&gt; nextNode() {
+            Node&lt;K,V&gt;[] t;
+            Node&lt;K,V&gt; e = next;
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            if (e == null)
+                throw new NoSuchElementException();
+            if ((next = (current = e).next) == null &amp;&amp; (t = table) != null) {
+                do {} while (index &lt; t.length &amp;&amp; (next = t[index++]) == null);
+            }
+            return e;
+        }
+
+        public final void remove() {
+            Node&lt;K,V&gt; p = current;
+            if (p == null)
+                throw new IllegalStateException();
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            current = null;
+            K key = p.key;
+            removeNode(hash(key), key, null, false, false);
+            expectedModCount = modCount;
+        }
+    }
+</code></pre>
+<p>​	在此点一下里面的一些代码吧，毕竟源码还是要自己读才有意思，能体会其牛逼。index指的是他在哪个slot(桶)，nextNode()方法中的</p>
+<p>(next = (current = e).next) == null ，这一部分每次来都会执行，他每次都会将next指向下一个元素，而e一直都是当前的元素。当这个表达式为空时时证明这个链表已经到末尾了下一个元素需要进入下一个桶，于是next = t[index++]，next成功指向下一个，而e一直指向的是现在应该指向的元素。</p>
+<p>这个抽象类的子类KeyIterator，ValueIterator，EntryIterator，你看了源码你就会晓得其实你的foreach,遍历的优越。</p>
+<pre><code class="language-java">final class KeyIterator extends HashIterator
+        implements Iterator&lt;K&gt; {
+        public final K next() { return nextNode().key; }
+    }
+
+    final class ValueIterator extends HashIterator
+        implements Iterator&lt;V&gt; {
+        public final V next() { return nextNode().value; }
+    }
+
+    final class EntryIterator extends HashIterator
+        implements Iterator&lt;Map.Entry&lt;K,V&gt;&gt; {
+        public final Map.Entry&lt;K,V&gt; next() { return nextNode(); }
+    }
+</code></pre>
+<p>KeyIterator就是取里面的key，ValueIterator就是取value值，于是我建议，当你在遍历中需要用到value和key的时候直接用entry吧。不要在通过啥子KeyIterator遍历到key后，再map.get(key)。好像一直忘记说了foreach只是迭代器的语法糖。你可以反编译进行查看。 javap -c 反编译如下如</p>
+<figure data-type="image" tabindex="1"><img src="https://whg001.github.io/post-images/1630983193308.png" alt="" loading="lazy"></figure>
+<h2 id="快照">快照</h2>
+<p>​	前面提到过，在遍历时由于他读的是原数组，于是导致其他线程对此数组的增删操作会抛出ConcurrentModificationException，可以你会想我们是不是可以在使用迭代器的时候构建一个快照snap。在此我就分析分析我对这里构建快照的几种方法与其看法。</p>
+<p>1.你可以在构建直接迭代器的时候直接拷贝原数组，在此浅拷贝就行，内存的额外增加不会过大。实现较为简单，但是有多少个迭代器就会增加多少个容器引用的大小，如果同时迭代的过多，内存占有还是很大</p>
+<p>2.是不是联想到了mysql的事务，来我们仿照MVCC模式</p>
+<p>2.1  对容器中的每一个对象加时间，即新增时间，删除时间。所有的增加删除都带有时间并且删除数据逻辑删除，即增加一个删除标记。</p>
+<p>2.2  在容器中增加一个链表，链表记录每个迭代器，并带有其创建时间，是否已经遍历完成</p>
+<p>2.3  迭代器遍历的时候对比容器中的数据的时间，达到隔离性，即在此迭代器创建之前已经删除的不可见，在此迭代器创建之后新增的，不可见。迭代完成后从链表中删除</p>
+<p>2.4  随后就是将以后不可能再访问的数据删除。即所有迭代器的创造时间都在其后面则这个元素以后永远也用不到可以进行真正的删除。因为在容器中用了一个链表按顺序保存，于是可以将删除的元素的时间更链表第一个迭代器(前提他已经遍历完了)比较如果时间小于此迭代器创建时间，则此元素可以删除，因为每次都要遍历比较个人觉得耗时蹩脚。</p>
+<p>2.5 可能你会觉得这个删除不怎么优雅，我也这么觉得，于是再思考思考。想要快索引肯定少不了，从索引出发进行思考，空间换时间！.........  思考良久后想了一个蹩脚的办法。在容器中增加保存删除元素的容器(链表还是数组自己衡量)命名为软删除容器,每个迭代器创建的时候将此容器中的数据浅拷贝一份到自己的地方，随后一个迭代器迭代完就查看迭代器链表的第一个是否已经迭代完，如果迭代完就删除掉里面的容器里逻辑删除元素，随后在软删除容器中也删除掉那些引用。</p>
+<p>最后提一句：想了这么多 还是直接抛个异常简单明了</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#java%E4%B8%AD%E7%9A%84abstractlist">java中的AbstractList</a>
+<ul>
+<li><a href="#%E9%87%8D%E8%A6%81%E5%85%83%E7%B4%A0">重要元素</a></li>
+<li><a href="#linklist%E7%9A%84%E8%BF%AD%E4%BB%A3%E5%99%A8">LinkList的迭代器</a></li>
+</ul>
+</li>
+<li><a href="#hashmap">HashMap</a></li>
+<li><a href="#%E5%BF%AB%E7%85%A7">快照</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/yuan-cheng-debug/">
+              <h3 class="post-title">
+                远程debug
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
