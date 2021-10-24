@@ -1,0 +1,280 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Node学习 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1635081784281">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="Node学习 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="JavaScript是一门“完整”的语言： 它可以使用在不同的上下文中。Node.js事实上就是另外一种上下文，它允许在后端（脱离浏览器环境）运行JavaScript代码。
+要实现在后台运行JavaScript代码，代码需要先被解释然后正确..." />
+    <meta name="keywords" content="js" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1635081784281" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              Node学习
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-10-24
+              </span>
+              <span>
+                6 min read
+              </span>
+              
+                <a href="https://whg001.github.io/tag/epTCQykWR/" class="post-tag">
+                  # js
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://whg001.github.io/post-images/node-xue-xi.png" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <p>JavaScript是一门“完整”的语言： 它可以使用在不同的上下文中。Node.js事实上就是另外一种上下文，它允许在后端（脱离浏览器环境）运行JavaScript代码。</p>
+<p>要实现在后台运行JavaScript代码，代码需要先被解释然后正确的执行。Node.js的原理正是如此，它使用了Google的V8虚拟机 （Google的Chrome浏览器使用的JavaScript执行环境），来解释和执行JavaScript代码。</p>
+<p>因此，Node.js事实上既是一个运行时环境，同时又是一个库。</p>
+<p>在面向对象的语言中，当我们谈到对象，指的是类或者结构体的实例。对象根据他们实例化的模板（就是所谓的类），会拥有不同的 属性和方法。但在JavaScript里对象不是这个概念。在JavaScript中，对象就是一个键/值对的集合 -- 你可以把JavaScript的对象想象成一个键为字符串类型的字典。</p>
+<h3 id="使用node开发http服务器一些感觉">使用node开发http服务器一些感觉</h3>
+<p>一个http服务，他应该拥有的模块：</p>
+<ul>
+<li>router模块专注于路由以及选择的对应的事件，类似于spring中的dispatcherservlet，负责接受和分发请求到对应的执行模块中。</li>
+<li>对应的server服务端模块，用于启动一个基础的HTTP服务器</li>
+<li>真正请求处理的模块，用于处理真正的请求(此处一般会更加细分为mvc)</li>
+<li>一个用于整合router与server的模块</li>
+</ul>
+<p>个人理解这样的模块划分使各个模块的职责更加单一，降低各个模块的耦合度。</p>
+<h4 id="对比java-socket">对比java socket</h4>
+<p>使用node，监听某个端口，当请求到来时就会去处理，单线程运行。</p>
+<p>对比java socket监听端口的传统bio模式有些不同，每来一个新的连接都需要一个线程去监听，是否有请求发送进来，这样会导致连接一多线程多，且大部分为阻塞状态消耗系统资源。现在通常都会使用nio非阻塞的模式，使用一个线程去轮询所有连接了的tcp，其中有请求的就去处理。</p>
+<p>js的单线程与nio模式很像。js属于单线程运行，它是一种单线程语言，所有任务都在一个线程上完成。为了解决io于网络开销，其拥有Event Loop(虽然能够减少io与网络等待开销，但其仍是单线程，并发能力如何？面对运算密集型的会不会是短板)。</p>
+<h4 id="event-loop">Event Loop</h4>
+<p>&quot;<strong>Event Loop是一个程序结构，用于等待和发送消息和事件。</strong>（a programming construct that waits for and dispatches events or messages in a program.）&quot;</p>
+<p>在程序中设置两个线程：一个负责程序本身的运行，称为&quot;主线程&quot;；另一个负责主线程与其他进程（主要是各种I/O操作）的通信，被称为&quot;Event Loop线程&quot;（可以译为&quot;消息线程&quot;）。</p>
+<figure data-type="image" tabindex="1"><img src="https://whg001.github.io/post-images/1635081169614.png" alt="" loading="lazy"></figure>
+<p>上图主线程的绿色部分，还是表示运行时间，而橙色部分表示空闲时间。每当遇到I/O的时候，主线程就让Event Loop线程去通知相应的I/O程序，然后接着往后运行，所以不存在红色的等待时间。等到I/O程序完成操作，Event Loop线程再把结果返回主线程。主线程就调用事先设定的回调函数，完成整个任务。</p>
+<h4 id="node的模型">node的模型</h4>
+<figure data-type="image" tabindex="2"><img src="https://whg001.github.io/post-images/1635081187624.png" alt="" loading="lazy"></figure>
+<p>node.js接受到的请求都会加入到EventQueue中，会等到EventLoop来进行处理，对于EventLoop中有阻塞操作的则会将其加入ThreadPool中等待其准备就绪再加入EventQueue中。</p>
+<h4 id="多进程">多进程</h4>
+<p>node虽然为单线程，但由于其模型结构所以对cpu的利用率还是超高的。但对于现在多核的cpu，单线程是发回不了其真正运算能力。在多核 CPU 系统之上，可以通过 <code>child_process.fork</code> 开启多个进程，即多个进程来发挥多核。</p>
+<p>例如,如下代码会根据cpu的核数，来创建多少个进程。于是就会有多少个线程来真正的执行处理</p>
+<pre><code class="language-js">const cluster = require('cluster');
+const os = require('os');
+
+if (cluster.isMaster) {
+    const cpus = os.cpus().length;
+    console.log('forking for ', cpus, ' CPUS');
+    for(let i = 0;i&lt;cpus;i++) {
+        cluster.fork();
+    }
+} else {
+    require('./index.js');
+}
+</code></pre>
+<p>npm install 安装相应的依赖</p>
+<p>进入到app.js 的目录运行 node app.js  即可启动</p>
+<h3 id="export">export</h3>
+<p>node中引入其他js代码中的方法 需要在原js代码中export，调用者进行require。</p>
+<p>node中引入其他模块使用的是必包,如下所示，于是引用模块中的全局变量s现在变成了匿名函数内部的局部变量。如果Node.js继续加载其他模块，<strong>这些模块中定义的“全局”变量s也互不干扰。</strong></p>
+<pre><code class="language-js">(function () {
+    // 读取的hello.js代码:
+    var s = 'Hello';
+    var name = 'world';
+
+    console.log(s + ' ' + name + '!');
+    // hello.js代码结束
+})();
+</code></pre>
+<p><strong>export原理</strong></p>
+<p>require(&quot;./xxx&quot;)一个文件时，实际上会把此文件的export加入到module的exports变量中，并将exports返回给调用者。于是var xxx = require(&quot;./xxx&quot;)就能够在xxx变量中获取到其exports的全部变量。</p>
+<h3 id="node新建项目">node新建项目</h3>
+<ol>
+<li>创建一个新的文件夹</li>
+<li><strong>npm init</strong>，初始化一个简单的package.json文件，执行该命令后终端会依次询问 name, version, description 等字段。**npm init --yes|-y ：**作用同上，偷懒不用一直按enter</li>
+<li><strong>touch index.js</strong>，</li>
+</ol>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#%E4%BD%BF%E7%94%A8node%E5%BC%80%E5%8F%91http%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%80%E4%BA%9B%E6%84%9F%E8%A7%89">使用node开发http服务器一些感觉</a>
+<ul>
+<li><a href="#%E5%AF%B9%E6%AF%94java-socket">对比java socket</a></li>
+<li><a href="#event-loop">Event Loop</a></li>
+<li><a href="#node%E7%9A%84%E6%A8%A1%E5%9E%8B">node的模型</a></li>
+<li><a href="#%E5%A4%9A%E8%BF%9B%E7%A8%8B">多进程</a></li>
+</ul>
+</li>
+<li><a href="#export">export</a></li>
+<li><a href="#node%E6%96%B0%E5%BB%BA%E9%A1%B9%E7%9B%AE">node新建项目</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/js-ji-chu-xue-xi/">
+              <h3 class="post-title">
+                JS基础学习
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

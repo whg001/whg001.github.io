@@ -1,0 +1,261 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>go的基本概念 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1635081784281">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="go的基本概念 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="gopath，goroot
+简单理解GOPATH是go的工程目录，GOPATH 是go的工程目录，GOPATH是go的工程目录，GOROOT 是go的安装目录。
+执行go env就可以看到gopath与其goroot
+GOPATH
+
+允许多..." />
+    <meta name="keywords" content="go" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1635081784281" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              go的基本概念
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-10-24
+              </span>
+              <span>
+                4 min read
+              </span>
+              
+                <a href="https://whg001.github.io/tag/35CThEehJ/" class="post-tag">
+                  # go
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://whg001.github.io/post-images/go-de-ji-ben-gai-nian.jpg" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h2 id="gopathgoroot">gopath，goroot</h2>
+<p>简单理解<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>G</mi><mi>O</mi><mi>P</mi><mi>A</mi><mi>T</mi><mi>H</mi><mi mathvariant="normal">是</mi><mi>g</mi><mi>o</mi><mi mathvariant="normal">的</mi><mi mathvariant="normal">工</mi><mi mathvariant="normal">程</mi><mi mathvariant="normal">目</mi><mi mathvariant="normal">录</mi><mi mathvariant="normal">，</mi></mrow><annotation encoding="application/x-tex">GOPATH 是go的工程目录，</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8777699999999999em;vertical-align:-0.19444em;"></span><span class="mord mathdefault">G</span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mord mathdefault" style="margin-right:0.13889em;">P</span><span class="mord mathdefault">A</span><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="mord mathdefault" style="margin-right:0.08125em;">H</span><span class="mord cjk_fallback">是</span><span class="mord mathdefault" style="margin-right:0.03588em;">g</span><span class="mord mathdefault">o</span><span class="mord cjk_fallback">的</span><span class="mord cjk_fallback">工</span><span class="mord cjk_fallback">程</span><span class="mord cjk_fallback">目</span><span class="mord cjk_fallback">录</span><span class="mord cjk_fallback">，</span></span></span></span>GOROOT 是go的安装目录。</p>
+<p>执行go env就可以看到gopath与其goroot</p>
+<h3 id="gopath">GOPATH</h3>
+<ul>
+<li>允许多个目录，当有多个目录时，请注意分隔符，多个目录的时候，在Mac和Linux下通过”:”分割；Windows是分号;</li>
+<li>当有多个GOPATH时默认将go get获取的包存放在第一个目录下</li>
+<li>$GOPATH目录约定有三个子目录
+<ol>
+<li>src：存放源代码(比如：.go .c .h .s等) 按照golang默认约定，go run，go install等命令的当前工作路径（即在此路径下执行上述命令）</li>
+<li>pkg：编译时生成的中间文件（比如：.a）　　golang编译包时。</li>
+<li>bin：编译后生成的可执行文件（在项目内执行go install，会把执行文件安装到bin目录）（为了方便，可以把此目录加入到PATH 变 量 中 ， 如 果 有 多 个 gopath ， 那 么 使 用 PATH 变量中，如果有多个gopath，那么使用PATH变量中，如果有多个gopath，那么使用{GOPATH//?/bin:}/bin添加所有的bin目录</li>
+</ol>
+</li>
+</ul>
+<p>go install xxx 生成的可执行文件，会在gopath的bin目录里面，将其复制到goroot的bin目录中可供全局使用</p>
+<h4 id="使用">使用</h4>
+<p>目前调研，网上大致分为三种流派， 每个流派的使用方式各有利弊。</p>
+<ul>
+<li>第一种：全局一个gopath，第三方库和项目源码都放在同一个gopah。采用github管理源码(公司内部采用git.code平台) + glide(go 包管理工具)管理依赖包。
+<ul>
+<li>优点：路径只有一个，足够简单，所有项目代码一目了然，阅读方便，采用glide实现版本依赖管理，解决了第三方依赖包升级冲突的问题。</li>
+<li>缺点：项目之间的依赖不隔离，容易错误引用到不希望的依赖。 业务代码与第三方依赖包代码在同一个目录，不美观。</li>
+</ul>
+</li>
+<li>第二种：只有两个gopath，第一个gopath存放第三方依赖包， 第二个gopath存放业务项目。 项目依赖管理同样可使用glide解决。</li>
+<li>第三种：每个项目有自己专属的gopath。优点是项目在任意目录下都能编译成功，项目之间无任何依赖。 缺点是如今是微服务的潮流，一个大型项目下会拆分成n个子项目，这样会导致gopath内轻轻松松就超过几十个项目路径。 解决办法是在每个项目中起一个build.sh脚本，执行build.sh脚本，先动态设置当前项目目录到gopath，然后才执行go build，这样项目copy到任意目录都能编译通过。</li>
+</ul>
+<h3 id="goroot">goroot</h3>
+<p>go的安装目录,其bin目录下的可执行文件可供全局使用，例如goimports,gofmt</p>
+<h3 id="go-module">go module</h3>
+<p><code>go module</code>将是Go语言默认的依赖管理工具。</p>
+<p><strong>go mod 常用命令</strong></p>
+<pre><code class="language-go">go mod download    下载依赖的module到本地cache（默认为$GOPATH/pkg/mod目录）
+go mod edit        编辑go.mod文件
+go mod graph       打印模块依赖图
+go mod init        初始化当前文件夹, 创建go.mod文件
+go mod tidy        增加缺少的module，删除无用的module
+go mod vendor      将依赖复制到vendor下
+go mod verify      校验依赖
+go mod why         解释为什么需要依赖
+</code></pre>
+<p>go mod 的详细介绍 https://zhuanlan.zhihu.com/p/59687626</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#gopathgoroot">gopath，goroot</a>
+<ul>
+<li><a href="#gopath">GOPATH</a>
+<ul>
+<li><a href="#%E4%BD%BF%E7%94%A8">使用</a></li>
+</ul>
+</li>
+<li><a href="#goroot">goroot</a></li>
+<li><a href="#go-module">go module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/go-yu-yan-sheng-jing-di-yi-zhang-yu-di-er-zhang/">
+              <h3 class="post-title">
+                go语言圣经第一章与第二章
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

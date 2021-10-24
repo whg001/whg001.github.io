@@ -1,0 +1,373 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>go语言圣经第一章与第二章 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1635081784281">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="go语言圣经第一章与第二章 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="strings
+课后有一个思考题比较strings.join与简单的字符串相加速度上的区别
+以下是自己编写的测试代码
+func generate() []string {
+	number := 10000
+	numberList := ma..." />
+    <meta name="keywords" content="go" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1635081784281" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              go语言圣经第一章与第二章
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-10-24
+              </span>
+              <span>
+                6 min read
+              </span>
+              
+                <a href="https://whg001.github.io/tag/35CThEehJ/" class="post-tag">
+                  # go
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://whg001.github.io/post-images/go-yu-yan-sheng-jing-di-yi-zhang-yu-di-er-zhang.jpg" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h3 id="strings">strings</h3>
+<p>课后有一个思考题比较strings.join与简单的字符串相加速度上的区别</p>
+<p>以下是自己编写的测试代码</p>
+<pre><code class="language-go">func generate() []string {
+	number := 10000
+	numberList := make([]string, number)
+	for  i := 0; i &lt; number; i++{
+		numberList[i] = string(rand.NewSource(42).Int63())
+	}
+	return numberList
+}
+
+func compare()  {
+	numbers := generate()
+	currentTime := time.Now().Nanosecond()
+	var s string = &quot;&quot;
+	for i := 0; i &lt; len(numbers); i++{
+		s += numbers[i]
+	}
+	fmt.Println(&quot;s 耗时 &quot;, time.Now().Nanosecond() - currentTime, &quot; 长度&quot;, len(s))
+	joinTime := time.Now().Nanosecond()
+	value := strings.Join(numbers, &quot;&quot;)
+	fmt.Println(&quot;join 耗时 &quot;, time.Now().Nanosecond() - joinTime , &quot; 长度&quot;, len(value))
+}
+
+//s 耗时  27093000  长度 30000
+//join 耗时  62000  长度 30000
+</code></pre>
+<p>很明显join速度远大于普通字符串相加。 golang中的string类型也是只读且不可变的。于是在+的过程中会频繁创建和销毁string比较消耗性能。阅读strings.Join阅读源码可知</p>
+<h4 id="stringsjoin">strings.Join</h4>
+<pre><code class="language-go">func Join(elems []string, sep string) string {
+	switch len(elems) {
+	case 0:
+		return &quot;&quot;
+	case 1:
+		return elems[0]
+	}
+  //计算长度
+	n := len(sep) * (len(elems) - 1)
+	for i := 0; i &lt; len(elems); i++ {
+		n += len(elems[i])
+	}
+
+  // 初始化一个拥有byte数组的对象
+	var b Builder
+	b.Grow(n)
+	b.WriteString(elems[0])
+	for _, s := range elems[1:] {
+		b.WriteString(sep)
+		b.WriteString(s)
+	}
+	return b.String()
+}
+</code></pre>
+<p>他是先计算出将要拼接的字符串的长度，然后在将其写入Builder中。</p>
+<h4 id="stringsbuilder">strings.Builder</h4>
+<pre><code class="language-go">type Builder struct {
+	addr *Builder // of receiver, to detect copies by value
+	buf  []byte
+}
+func (b *Builder) grow(n int) {
+	buf := make([]byte, len(b.buf), 2*cap(b.buf)+n)
+	copy(buf, b.buf)
+	b.buf = buf
+}
+// Write appends the contents of p to b's buffer.
+// Write always returns len(p), nil.
+func (b *Builder) Write(p []byte) (int, error) {
+	b.copyCheck()
+	b.buf = append(b.buf, p...)
+	return len(p), nil
+}
+
+// WriteByte appends the byte c to b's buffer.
+// The returned error is always nil.
+func (b *Builder) WriteByte(c byte) error {
+	b.copyCheck()
+	b.buf = append(b.buf, c)
+	return nil
+}
+</code></pre>
+<p>如上，他是一个byte数组，提供了写入的能力，strings.Join提前grow了其长度，避免了因内存不足的复制。从而使其字符串拼接更加高效。</p>
+<p><strong>在需要字符串拼接时，推荐使用strings.join</strong></p>
+<h3 id="变量">变量</h3>
+<p>go中方法外的变量为包变量，包变量同包内可以访问，但你会发现你访问不了main包下面的包变量。不能在其他任何地方访问&quot; main&quot;包中的符号，原因很简单，因为<strong>Go不允许导入循环</strong>。</p>
+<p>一般情况更推荐简短的变量声明，<strong>通常来说 如果一个名字的作用域比较大，生命周期也比较长，那么用长的名字将会更有意义</strong>。比如在一个很小的循环里面的变量声明 i 比 loopindex更加好。</p>
+<p>make函数创造的都是引用，所以进行传递时，直接更改的是原数据</p>
+<p>当前变量覆盖外层变量</p>
+<h4 id="类型推断">类型推断</h4>
+<p>简短变量说明，可以用于声明和初始化局部变量。语法<code>名字:= 表达式</code>。变量类型更具表达式来自动推荐。</p>
+<p>类型推断在一定情况下，属于动态类型，其类型是可以改变的，所以也会带来一些动态类型编程语言所带来的一部分优势，即程序灵活性的明显提升。Go 语言的类型推断可以明显提升程序的灵活性，使得代码重构变得更加容易，同时又不会给代码的维护带来额外负担（实际上，它恰恰可以避免散弹式的代码修改），更不会损失程序的运行效率。</p>
+<blockquote>
+<p>我们通常把不改变某个程序与外界的任何交互方式和规则，而只改变其内部实现”的代码修改方式，叫做对该程序的重构。重构的对象可以是一行代码、一个函数、一个功能模块，甚至一个软件系统。</p>
+</blockquote>
+<p>例如以下代码</p>
+<pre><code class="language-go">package main
+
+import (
+  &quot;flag&quot;
+  &quot;fmt&quot;
+)
+
+func main() {
+  var name = getTheFlag()
+  fmt.Printf(&quot;Hello, %v!\n&quot;, *name)
+}
+
+func getTheFlag() *string {
+  return flag.String(&quot;name&quot;, &quot;everyone&quot;, &quot;The greeting object.&quot;)
+}
+</code></pre>
+<p>可以随意改变getTheFlag函数的内部实现，及其返回结果的类型，而不用修改main函数中的任何代码。</p>
+<p>表达式new(T)将创建 一个类型为T的匿名对象，初始化为T类型的零值，然后返回变量地址，返回的指针为*T。</p>
+<pre><code class="language-go">p := new(int)
+fmt.Println(*p)
+*p = 2
+fmt.Println(*p)
+</code></pre>
+<h4 id="变量的分配">变量的分配</h4>
+<p>对于在包一级生命的变量来说，他们的生命周期和整个程序的运行周期是一致的。</p>
+<p>编译器会自动选择出在栈上还是堆上分配局部变量的存储空间。</p>
+<pre><code class="language-go">var global *int
+
+func f(){
+  var x int
+  x = 1
+  global = &amp;x
+}
+
+func g(){
+  y := new(int)
+  *y = 1
+}
+</code></pre>
+<p>f函数里的x必须分配在堆上。因为它在函数退出后依然可以通过包一级的变量global找到。这叫做x局部变量从函数f中逃逸了。当g()函数返回时*y将是不可达的，也就是说可以马上回收。一次编译器可以选择在栈上分配 *y的存储空间(也可以选择在堆上)。</p>
+<p>对于每一个类型T，都有一个对应的类型转换操作T(x)，用于将x转为T类型。只有当2个类型的底层基础类型相同时，才允许这种转型操作，或者是两者都是指向相同底层结构的指针类型，这些转换只改变类型而不会影响值本身。底层数据类型决定了内部结构和表达方式，也决定是否可以像底层类型一样对内置运算符的支持。例如下面的Tempx和Tempy</p>
+<pre><code class="language-go">type Tempx int
+type Tempy int
+const (
+	tempx Tempx = 4
+	tempy Tempy = 4
+)
+func CastToTempy() Tempy{
+	return Tempy(tempx/2)
+}
+
+func IsSimple() bool{
+	return Tempy(tempx) == tempy
+}
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#strings">strings</a>
+<ul>
+<li><a href="#stringsjoin">strings.Join</a></li>
+<li><a href="#stringsbuilder">strings.Builder</a></li>
+</ul>
+</li>
+<li><a href="#%E5%8F%98%E9%87%8F">变量</a>
+<ul>
+<li><a href="#%E7%B1%BB%E5%9E%8B%E6%8E%A8%E6%96%AD">类型推断</a></li>
+<li><a href="#%E5%8F%98%E9%87%8F%E7%9A%84%E5%88%86%E9%85%8D">变量的分配</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/node-xue-xi/">
+              <h3 class="post-title">
+                Node学习
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

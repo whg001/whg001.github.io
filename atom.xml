@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://whg001.github.io</id>
     <title>haogui</title>
-    <updated>2021-09-07T03:04:15.023Z</updated>
+    <updated>2021-10-24T13:23:07.484Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://whg001.github.io"/>
     <link rel="self" href="https://whg001.github.io/atom.xml"/>
@@ -10,6 +10,34 @@
     <logo>https://whg001.github.io/images/avatar.png</logo>
     <icon>https://whg001.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, haogui</rights>
+    <entry>
+        <title type="html"><![CDATA[go的基本概念]]></title>
+        <id>https://whg001.github.io/post/go-de-ji-ben-gai-nian/</id>
+        <link href="https://whg001.github.io/post/go-de-ji-ben-gai-nian/">
+        </link>
+        <updated>2021-10-24T13:20:12.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[go语言圣经第一章与第二章]]></title>
+        <id>https://whg001.github.io/post/go-yu-yan-sheng-jing-di-yi-zhang-yu-di-er-zhang/</id>
+        <link href="https://whg001.github.io/post/go-yu-yan-sheng-jing-di-yi-zhang-yu-di-er-zhang/">
+        </link>
+        <updated>2021-10-24T13:14:45.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Node学习]]></title>
+        <id>https://whg001.github.io/post/node-xue-xi/</id>
+        <link href="https://whg001.github.io/post/node-xue-xi/">
+        </link>
+        <updated>2021-10-24T13:11:52.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[JS基础学习]]></title>
+        <id>https://whg001.github.io/post/js-ji-chu-xue-xi/</id>
+        <link href="https://whg001.github.io/post/js-ji-chu-xue-xi/">
+        </link>
+        <updated>2021-10-24T13:09:29.000Z</updated>
+    </entry>
     <entry>
         <title type="html"><![CDATA[迭代器]]></title>
         <id>https://whg001.github.io/post/die-dai-qi/</id>
@@ -51,33 +79,5 @@
         <link href="https://whg001.github.io/post/teng-xun-yi-mian/">
         </link>
         <updated>2021-07-22T00:55:33.000Z</updated>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[JUC下面的队列]]></title>
-        <id>https://whg001.github.io/post/juc-xia-mian-de-dui-lie/</id>
-        <link href="https://whg001.github.io/post/juc-xia-mian-de-dui-lie/">
-        </link>
-        <updated>2021-07-19T03:18:07.000Z</updated>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[ping与http 面试题]]></title>
-        <id>https://whg001.github.io/post/ping-yu-http-mian-shi-ti/</id>
-        <link href="https://whg001.github.io/post/ping-yu-http-mian-shi-ti/">
-        </link>
-        <updated>2021-07-18T07:36:23.000Z</updated>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[java线程池]]></title>
-        <id>https://whg001.github.io/post/java-xian-cheng-chi/</id>
-        <link href="https://whg001.github.io/post/java-xian-cheng-chi/">
-        </link>
-        <updated>2021-07-17T08:14:59.000Z</updated>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[红黑树定义]]></title>
-        <id>https://whg001.github.io/post/hong-hei-shu-ding-yi/</id>
-        <link href="https://whg001.github.io/post/hong-hei-shu-ding-yi/">
-        </link>
-        <updated>2021-07-17T00:01:49.000Z</updated>
     </entry>
 </feed>
