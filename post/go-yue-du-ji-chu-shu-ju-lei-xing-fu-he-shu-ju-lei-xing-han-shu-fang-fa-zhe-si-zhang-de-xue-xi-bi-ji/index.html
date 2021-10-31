@@ -1,0 +1,337 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>go阅读基础数据类型，复合数据类型，函数，方法这四章的学习笔记 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1635689970635">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="go阅读基础数据类型，复合数据类型，函数，方法这四章的学习笔记 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="数据类型
+在Go语言中，%取模运算符的符号和被取模数的符号总是一致的，因此-5%3和-5%-3结果都是-2。除法运算符/的行为则依赖于操作数是否全为整数，比如5.0/4.0的结果是1.25，但是5/4的结果是1，因为整数除法会向着0方向截断..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1635689970635" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              go阅读基础数据类型，复合数据类型，函数，方法这四章的学习笔记
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-10-31
+              </span>
+              <span>
+                9 min read
+              </span>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://whg001.github.io/post-images/go-yue-du-ji-chu-shu-ju-lei-xing-fu-he-shu-ju-lei-xing-han-shu-fang-fa-zhe-si-zhang-de-xue-xi-bi-ji.jpg" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h3 id="数据类型">数据类型</h3>
+<p>在Go语言中，%取模运算符的符号和被取模数的符号总是一致的，因此<code>-5%3</code>和<code>-5%-3</code>结果都是-2。除法运算符<code>/</code>的行为则依赖于操作数是否全为整数，比如<code>5.0/4.0</code>的结果是1.25，但是5/4的结果是1，因为整数除法会向着0方向截断余数。</p>
+<p>一个算术运算的结果，不管是有符号或者是无符号的，如果需要更多的bit位才能正确表示的话，就说明计算结果是溢出了。超出的高位的bit位部分将被丢弃。如果原始的数值是有符号类型，而且最左边的bit位是1的话，那么最终结果可能是负的。</p>
+<p>非数NaN则是充满风险的，因为<strong>NaN和任何数都是不相等</strong>的</p>
+<pre><code class="language-Go">nan := math.NaN()
+fmt.Println(nan == nan, nan &lt; nan, nan &gt; nan) // &quot;false false false&quot;
+</code></pre>
+<p>所有常量的运算都可以在编译期完成，这样可以减少运行时的工作，也方便其他编译优化。</p>
+<p>常量间的所有算术运算、逻辑运算和比较运算的结果也是常量，对常量的类型转换操作或以下函数调用都是返回常量结果：len、cap、real、imag、complex和unsafe.Sizeof</p>
+<h4 id="slice">slice</h4>
+<p>如果你需要测试一个slice是否是空的，使用len(s) == 0来判断，而不应该用s == nil来判断。除了和nil相等比较外，一个nil值的slice的行为和其它任意0长度的slice一样；</p>
+<pre><code class="language-Go">var s []int    // len(s) == 0, s == nil
+s = nil        // len(s) == 0, s == nil
+s = []int(nil) // len(s) == 0, s == nil
+s = []int{}    // len(s) == 0, s != nil
+</code></pre>
+<p>slice的<strong>append</strong>方法</p>
+<p>如下是第一个版本的appendInt</p>
+<pre><code class="language-go">func appendInt(x []int, y int) []int {
+    var z []int
+    zlen := len(x) + 1
+    if zlen &lt;= cap(x) {
+        // There is room to grow.  Extend the slice.
+        z = x[:zlen]
+    } else {
+        // There is insufficient space.  Allocate a new array.
+        // Grow by doubling, for amortized linear complexity.
+        zcap := zlen
+        if zcap &lt; 2*len(x) {
+            zcap = 2 * len(x)
+        }
+        z = make([]int, zlen, zcap)
+        copy(z, x) // a built-in function; see text
+    }
+    z[len(x)] = y
+    return z
+}
+</code></pre>
+<blockquote>
+<p>上面当实际的底层数组大小不够时，<strong>会直接分配一个2倍大小的空间，这样就避免了经常性开辟空间给这个数组的情况。也可以说是一个空间换时间，让以后的append操作更加的快</strong>，这样的场景在很多操作中很常见例如java的arrayList，hashMap等，go中的strings.Builder 里面的grow()</p>
+</blockquote>
+<p>一个slice可以用来模拟一个stack。最初给定的空slice对应一个空的stack，然后可以使用append函数将新的值压入stack：</p>
+<pre><code class="language-Go">stack = append(stack, v) // push v
+</code></pre>
+<p>stack的顶部位置对应slice的最后一个元素：</p>
+<pre><code class="language-Go">top := stack[len(stack)-1] // top of stack
+</code></pre>
+<p>通过收缩stack可以弹出栈顶的元素</p>
+<pre><code class="language-Go">stack = stack[:len(stack)-1] // pop
+</code></pre>
+<p>Map的迭代顺序是不确定的，并且不同的哈希函数实现可能导致不同的遍历顺序。在实践中，遍历的顺序是随机的，每一次遍历的顺序都不相同。这是故意的，每次都使用随机的遍历顺序可以强制要求程序不会依赖具体的哈希函数实现。如果要按顺序遍历key/value对，我们必须显式地对key进行排序，可以使用sort包的Strings函数对字符串slice进行排序。例如</p>
+<pre><code class="language-go">import &quot;sort&quot;
+
+ages := make(map[string]int) 
+var names []string
+for name := range ages {
+    names = append(names, name)
+}
+sort.Strings(names)
+for _, name := range names {
+    fmt.Printf(&quot;%s\t%d\n&quot;, name, ages[name])
+}
+</code></pre>
+<p>结构体中，Go语言有一个特性让我们只声明一个成员对应的数据类型而不指名成员的名字；这类成员就叫匿名成员。匿名成员的数据类型必须是命名的类型或指向一个命名的类型的指针。</p>
+<pre><code class="language-Go">type Point struct {
+    X, Y int
+}
+
+// 方式一,访问X-&gt;Circle.Center.X
+type Circle struct {
+    Center Point
+    Radius int
+}
+
+type Wheel struct {
+    Circle Circle
+    Spokes int
+}
+
+// 方式二，这是go语言的特性Point，Circle为匿名成员，会将Point和Circle的成员变量直接加入到其中.于是可以这么访问Circle.X
+type Circle struct {
+    Point
+    Radius int
+}
+
+type Wheel struct {
+    Circle
+    Spokes int
+}
+</code></pre>
+<p>个人突然觉得还是不推荐这种写法，在命名上容易有冲突。</p>
+<h3 id="匿名函数">匿名函数</h3>
+<p>如下返回一个匿名函数</p>
+<pre><code class="language-go">// 该匿名函数每次被调用时都会返回下一个数的平方。func squares() func() int {    var x int    return func() int {        x++        return x * x    }}func main() {    f := squares()    fmt.Println(f()) // &quot;1&quot;    fmt.Println(f()) // &quot;4&quot;    fmt.Println(f()) // &quot;9&quot;    fmt.Println(f()) // &quot;16&quot;}
+</code></pre>
+<p>squares的例子证明，函数值不仅仅是一串代码，还记录了状态。<strong>在squares中定义的匿名内部函数可以访问和更新squares中的局部变量，这意味着匿名函数和squares中，存在变量引用</strong>。这就是函数值属于引用类型和函数值不可比较的原因。Go使用闭包（closures）技术实现函数值，Go程序员也把函数值叫做闭包。这个变量x生命周期不由它的作用域决定：squares返回后，变量x仍然隐式的存在于f中。</p>
+<p><strong>匿名函数中的使用父类函数的变量时，其存储的是变量引用。需要主要其值的变化会直接影响原始数据</strong></p>
+<h4 id="defer">defer</h4>
+<p>你只需要在调用普通函数或方法前加上关键字defer，就完成了defer所需要的语法。<strong>当执行到该条语句时，函数和参数表达式得到计算，但直到包含该defer语句的函数执行完毕时，defer后的函数才会被执行</strong>，不论包含defer语句的函数是通过return正常结束，还是由于panic导致的异常结束。你可以在一个函数中执行多条defer语句，它们的执行顺序与声明顺序相反。</p>
+<p>像下面的使用会在trace函数进入时调用，但其返回的匿名函数就会等到bigSlowOperation执行完后调用，这样就能记录这个函数的耗时</p>
+<pre><code>func bigSlowOperation() {   defer trace(&quot;bigSlowOperation&quot;) // don't forget the extra parentheses   log.Printf(&quot;aaa&quot;)   // ...lots of work…   time.Sleep(1 * time.Second) // simulate slow operation by sleeping}func trace(msg string) func() {   start := time.Now()   log.Printf(&quot;enter %s&quot;, msg)   return func() {      log.Printf(&quot;exit %s (%s)&quot;, msg,time.Since(start))   }}
+</code></pre>
+<p><strong>defer语句中的函数会在return语句更新返回值变量后再执行，又因为在函数中定义的匿名函数可以访问该函数包括返回值变量在内的所有变量</strong>，所以，对匿名函数采用defer机制，可以使其观察函数的返回值。</p>
+<p><strong>在循环体中的defer语句需要特别注意</strong>，因为只有在函数执行完毕后，这些被延迟的函数才会执行。下面的代码会导致系统的文件描述符耗尽，因为在所有文件都被处理之前，没有文件会被关闭。</p>
+<h3 id="方法">方法</h3>
+<p>方法声明中将方法的调用者称为方法的<strong>接收器(receiver)</strong>，例如 p.Distance(),中p就是方法的接收器。而 <strong>p.Distance的表达式称为选择器，因为他会选择合适的对应p这个对象的Distance方法来执行</strong>。</p>
+<h4 id="基于指针对象的方法">基于指针对象的方法</h4>
+<p>当调用一个函数时，会对其每一个参数值进行拷贝。当你需要更新其成员时就需要用到指针对象。</p>
+<p><strong>在程序中有一个约定，如果一类中有一个指针作为接收器的方法，则所有方法都必须有一个指针接收器，即使是那些不需要指针接收器的方法。</strong></p>
+<p>**对于类方法的调用。不管你是method的received是指针类型还是非指针类型，都是可以通过指针/非指针类型进行调用的。编译器会帮你自动转型。**这点挺好的，一开始看着指针和非指针都是一样的调用，还没弄清楚为啥</p>
+<p>nil也是一个合法的接收器类型。</p>
+<p>通过嵌入结构体来拓展类型的方法，觉得和面向对象中的组合一致，增加些许语法糖。</p>
+<h4 id="方法值和方法表达式">方法值和方法表达式</h4>
+<p>p.Distance()形式的方法调用，实际上是2步。</p>
+<ol>
+<li>p.Distance叫做选择器，编译器会返回一个方法&quot;值&quot;-&gt;一个将方法Distance绑定到特定接收器变量的<strong>函数</strong>，<strong>这个函数可以不指定其接收器即可被调用</strong></li>
+<li>随后<code>()</code>就是对上一个函数进行调用</li>
+</ol>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B">数据类型</a>
+<ul>
+<li><a href="#slice">slice</a></li>
+</ul>
+</li>
+<li><a href="#%E5%8C%BF%E5%90%8D%E5%87%BD%E6%95%B0">匿名函数</a>
+<ul>
+<li><a href="#defer">defer</a></li>
+</ul>
+</li>
+<li><a href="#%E6%96%B9%E6%B3%95">方法</a>
+<ul>
+<li><a href="#%E5%9F%BA%E4%BA%8E%E6%8C%87%E9%92%88%E5%AF%B9%E8%B1%A1%E7%9A%84%E6%96%B9%E6%B3%95">基于指针对象的方法</a></li>
+<li><a href="#%E6%96%B9%E6%B3%95%E5%80%BC%E5%92%8C%E6%96%B9%E6%B3%95%E8%A1%A8%E8%BE%BE%E5%BC%8F">方法值和方法表达式</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/zero-copy-and-mmap/">
+              <h3 class="post-title">
+                zero-copy and mmap
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
