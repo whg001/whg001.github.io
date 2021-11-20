@@ -1,0 +1,337 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>线上遇到过的问题 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1637396491353">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="线上遇到过的问题 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="在工作中遇到的实际问题
+es
+es插入太频繁，导致插入越来越慢
+​	页面总是查询不到最近的权重线程池信息，原因排查 kafka消息滞后 -&gt;查看es的健康状态发现cpu过高。
+排查结论：es插入太频繁，导致插入速度变慢，es中的数据是..." />
+    <meta name="keywords" content="面试" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1637396491353" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              线上遇到过的问题
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-11-20
+              </span>
+              <span>
+                9 min read
+              </span>
+              
+                <a href="https://whg001.github.io/tag/AKBQ_fHnE/" class="post-tag">
+                  # 面试
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://whg001.github.io/post-images/xian-shang-yu-dao-guo-de-wen-ti.jpg" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h1 id="在工作中遇到的实际问题">在工作中遇到的实际问题</h1>
+<h2 id="es">es</h2>
+<h3 id="es插入太频繁导致插入越来越慢">es插入太频繁，导致插入越来越慢</h3>
+<p>​	页面总是查询不到最近的权重线程池信息，原因排查 kafka消息滞后 -&gt;查看es的健康状态发现cpu过高。</p>
+<p>排查结论：es插入太频繁，导致插入速度变慢，es中的数据是通过kafka消费而来，于是页面搜索不到近实时数据</p>
+<h4 id="es插入更新原理refreshflushmerge">es插入更新原理，refresh，flush，merge</h4>
+<h4 id="refresh原理">refresh原理</h4>
+<figure data-type="image" tabindex="1"><img src="https://whg001.github.io/post-images/1637396064558.png" alt="" loading="lazy"></figure>
+<ol>
+<li>
+<p>数据写入buffer缓冲和translog日志文件中。<br>
+当你写一条数据document的时候，一方面写入到mem buffer缓冲中，一方面同时写入到translog日志文件中。</p>
+</li>
+<li>
+<p>buffer满了或者<strong>每隔1秒</strong>(可配)，refresh将mem buffer中的数据生成index segment文件并写入os cache，此时index segment可被打开以供search查询读取，这样文档就可以被搜索到了（注意，此时文档还没有写到磁盘上）；然后清空mem buffer供后续使用。可见，refresh实现的是文档从内存移到文件系统缓存的过程。</p>
+</li>
+<li>
+<p>重复上两个步骤，新的segment不断添加到os cache，mem buffer不断被清空，而translog的数据不断增加，随着时间的推移，translog文件会越来越大。</p>
+</li>
+<li>
+<p>当translog长度达到一定程度的时候，会触发flush操作，否则默认每隔30分钟也会定时flush，其主要过程：<br>
+4.1. 执行refresh操作将mem buffer中的数据写入到新的segment并写入os cache，然后打开本segment以供search使用，最后再次清空mem buffer。<br>
+4.2. 一个commit point被写入磁盘，这个commit point中标明所有的index segment。<br>
+4.3. filesystem cache（os cache）中缓存的所有的index segment文件被fsync强制刷到磁盘os disk，当index segment被fsync强制刷到磁盘上以后，就会被打开，供查询使用。<br>
+4.4. translog被清空和删除，创建一个新的translog。</p>
+</li>
+</ol>
+<p>由于自动刷新流程(refresh)每秒会创建一个新的段 ，这样会导致短时间内的段数量暴增。而段数目太多会带来较大的麻烦。 每一个段都会消耗文件句柄、内存和cpu运行周期。更重要的是，每个搜索请求都必须轮流检查每个段；所以段越多，搜索也就越慢。</p>
+<p>1、 当索引的时候，刷新（refresh）操作会创建新的段并将段打开以供搜索使用。</p>
+<p>2、 合并进程选择一小部分大小相似的段，并且在后台将它们合并到更大的段中。这并不会中断索引和搜索。(<strong>这一步叫做merge</strong>，也十分消耗性能)</p>
+<p>elastic.co/guide/cn/elasticsearch/guide/current/merge-process.html</p>
+<h4 id="解决方法">解决方法</h4>
+<p>不在实时插入，当满100条在插入，这样会减少segment(段)的数量，就会大量降低内存，同样将少了segment，也就减少了merge操作，于是cpu降低。实践证明这样后cpu降低，能查到实时数据</p>
+<h3 id="es搜索由于数据量过大导致搜索过慢">es搜索由于数据量过大，导致搜索过慢</h3>
+<p>​	项目监控日志需求，要求记录整个公司已事业部为维度，统计错误日志占比最高的前10，要求有日环比，周同比。</p>
+<p>​	在es中进行以事业部为维度聚合日志总数，错误日志总数，其占比时，写出查询语句发现这一个语句直接超时。</p>
+<p>​	通过缩小时间跨度，发现3个小时内的聚合在5秒以内，<strong>于是采用多线程将时间缩短进行分段查询，随后在进行整合，通过堆排序取出前10，将其整体时间控制在15m以内</strong>。并每天将所有日志已事业部为维度，存入es中，便于日环比与周同比的计算</p>
+<h3 id="es内存熔断">es内存熔断</h3>
+<p>​	在es中聚合权重线程池中的数据时有一段时间，查询es直接报错，返回Data too large, data for [xxx] would be larger than limit</p>
+<p>​	经过查阅文档发现由于es的内存保护机制导致，当es预估这个查询对内存的消耗超过某个值时，为了防止oom以及影响其他查询，断路器会直接掐断此次查询，并且在一段时间内相同请求不会再生效。</p>
+<p>​	由于内存消耗是按照分配的内存比例而来，于是给es将内存增高就没有再出现。</p>
+<h2 id="mysql">mysql</h2>
+<h3 id="查询耗时">查询耗时</h3>
+<p>​	一个上千万的文件存储的表，进行分页查询时，发现count(1) 操作都很慢几分钟都无果，但要做到按照时间倒序分页。</p>
+<p>​	实现思路分页是伪分页，没有显示总页数，但你可以自己输入页数以及上一页，下一页。</p>
+<p>​	根据时间倒序排列如果使用order create_time,耗时巨久，用户基本接受不了，但是如果给create_time创建索引，觉得有些不划算，由于id是自增的，且为主键，于是我使用了id进行倒序分页，虽然耗时仍然较高这让用户可以接受此查询时间5s。</p>
+<h2 id="session">session</h2>
+<h2 id="java">java</h2>
+<h3 id="分布式事务中的坑">分布式事务中的坑</h3>
+<h4 id="场景">场景</h4>
+<p>​	支付事业部生产环境，突然所有访问超时，机器中一个节点处理不了任何请求，而且对应mysql的机器访问全部超时。瘫痪长达半个小时</p>
+<h4 id="排查">排查</h4>
+<p>​	每个人员排查自己所负责的组件发现，kafka假死。为何kafka假死会出现这么严重的问题。</p>
+<p>​	排查代码发现代码逻辑大概如下，由于监控需求需要把一些数据发入kafka。于是工作人员在写入数据库之后的事务中，使用了异步线程池，异步线程池做的事就是将数据发送至kafka，异步线程池中所使用的策略为CallerRunsPolicy。</p>
+<pre><code>1. AbortPolicy      默认策略，直接跑出异常阻止系统正常运行。
+2. CallerRunsPolicy   “调用者运行”一种调节机制，该策略既不会抛弃任务，也不会抛出异常，而是将任务回馈至发起方比如main线程。
+3. DiscardOldestPolicy  抛弃队列中等待最久的任务，然后把当前任务加入队列中尝试再次提交当前任务。
+4. DiscardPolicy     直接丢弃任务，不给予任何处理也不跑出异常，如果允许任务丢失，这是最好的一种方案。
+</code></pre>
+<h4 id="原因分析">原因分析</h4>
+<ol>
+<li>对于不重要的业务，不建议使用分布式事务</li>
+<li>此场景中，线程池的策略为CallerRunsPolicy，当kafka阻塞时，线程池拉满，由调用线程来执行，导致tomcat中线程拉满，此节点接受不了任何请求了</li>
+<li>分布式事务中，开始了mysql的事务但是kafka一直阻塞，导致mysql连接与资源一直被占用且拉满。于是长事务导致mysql资源基本耗尽</li>
+</ol>
+<h4 id="总结">总结</h4>
+<p>分布式中尽量不要使用事务，使用最好带上超时时间，如果不是特别重要的业务线程池不要使用CallerRunsPolicy的拒绝策略。</p>
+<p>公司要人背锅时四处踢皮球，声称这是100w买来的教训</p>
+<h3 id="oom">oom</h3>
+<p>​	线上轩辕平台过2天就行进行一次告警，内存不足，打开日志发现以下问题</p>
+<figure data-type="image" tabindex="2"><img src="https://whg001.github.io/post-images/1637396114898.png" alt="" loading="lazy"></figure>
+<p>​	显然是gc不了了，思考了一下最近一次上线更新的东西，大概率是redis监控除了问题，为了排查使用了如下命令</p>
+<pre><code class="language-shell"># 查看内存使用情况
+jmap -heap pid
+# 查看内存中前100的大对象
+jmap -histo:live pid | head -100
+# 生成dump文件
+jmap -dump:file=文件名.dump [pid]
+</code></pre>
+<p>用过jmap -histo:live pid | head 100命令观察后发现，2个小时后，jedisFactory涌现了出来，排查代码发现，redis监控对单个jedis进行了关闭，但没有对集群的监控进行关闭，每次定时任务执行后都会创建对象，于是导致一直回收不了出现问题。<br>
+<img src="https://whg001.github.io/post-images/1637396453866.png" alt="" loading="lazy"></p>
+<p>线上分析：</p>
+<p>下载MAT工具 wget -O mat.zip http://mirrors.neusoft.edu.cn/eclipse/mat/1.10.0/rcp/MemoryAnalyzer-1.10.0.20200225-linux.gtk.x86_64.zip</p>
+<p>分析dump文件(hprof)</p>
+<p>./mat/ParseHeapDump.sh /tmp/77_17309_ehuser.hprof org.eclipse.mat.api:suspects org.eclipse.mat.api:overview org.eclipse.mat.api:top_components</p>
+<p>跳转至/tmp目录，将应用内存dump文件复制到/tmp</p>
+<p>下载MAT工具 wget -O mat.zip http://mirrors.neusoft.edu.cn/eclipse/mat/1.10.0/rcp/MemoryAnalyzer-1.10.0.20200225-linux.gtk.x86_64.zip</p>
+<p>解压zip</p>
+<p>unzip mat.zip</p>
+<p>分析dump文件(hprof)</p>
+<p>./mat/ParseHeapDump.sh   &lt;dump文件名&gt;  org.eclipse.mat.api:suspects org.eclipse.mat.api:overview org.eclipse.mat.api:top_components</p>
+<p>分析结果为zip文件，与dump文件同目录，下载到本地，解压，打开里面index.html 注：分析大dump文件时，分析过程可能会发生OOM内存溢出，可通过加大mat/MemoryAnalyzer.ini内存参数解决 -Xmx10240m 修改-Xmx的值，使大于hprof文件的大小，建议是其2倍大小</p>
+<h2 id="redis">redis</h2>
+<h3 id="bigkey">bigkey</h3>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#%E5%9C%A8%E5%B7%A5%E4%BD%9C%E4%B8%AD%E9%81%87%E5%88%B0%E7%9A%84%E5%AE%9E%E9%99%85%E9%97%AE%E9%A2%98">在工作中遇到的实际问题</a>
+<ul>
+<li><a href="#es">es</a>
+<ul>
+<li><a href="#es%E6%8F%92%E5%85%A5%E5%A4%AA%E9%A2%91%E7%B9%81%E5%AF%BC%E8%87%B4%E6%8F%92%E5%85%A5%E8%B6%8A%E6%9D%A5%E8%B6%8A%E6%85%A2">es插入太频繁，导致插入越来越慢</a>
+<ul>
+<li><a href="#es%E6%8F%92%E5%85%A5%E6%9B%B4%E6%96%B0%E5%8E%9F%E7%90%86refreshflushmerge">es插入更新原理，refresh，flush，merge</a></li>
+<li><a href="#refresh%E5%8E%9F%E7%90%86">refresh原理</a></li>
+<li><a href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95">解决方法</a></li>
+</ul>
+</li>
+<li><a href="#es%E6%90%9C%E7%B4%A2%E7%94%B1%E4%BA%8E%E6%95%B0%E6%8D%AE%E9%87%8F%E8%BF%87%E5%A4%A7%E5%AF%BC%E8%87%B4%E6%90%9C%E7%B4%A2%E8%BF%87%E6%85%A2">es搜索由于数据量过大，导致搜索过慢</a></li>
+<li><a href="#es%E5%86%85%E5%AD%98%E7%86%94%E6%96%AD">es内存熔断</a></li>
+</ul>
+</li>
+<li><a href="#mysql">mysql</a>
+<ul>
+<li><a href="#%E6%9F%A5%E8%AF%A2%E8%80%97%E6%97%B6">查询耗时</a></li>
+</ul>
+</li>
+<li><a href="#session">session</a></li>
+<li><a href="#java">java</a>
+<ul>
+<li><a href="#%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B8%AD%E7%9A%84%E5%9D%91">分布式事务中的坑</a>
+<ul>
+<li><a href="#%E5%9C%BA%E6%99%AF">场景</a></li>
+<li><a href="#%E6%8E%92%E6%9F%A5">排查</a></li>
+<li><a href="#%E5%8E%9F%E5%9B%A0%E5%88%86%E6%9E%90">原因分析</a></li>
+<li><a href="#%E6%80%BB%E7%BB%93">总结</a></li>
+</ul>
+</li>
+<li><a href="#oom">oom</a></li>
+</ul>
+</li>
+<li><a href="#redis">redis</a>
+<ul>
+<li><a href="#bigkey">bigkey</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/go-yue-du-ji-chu-shu-ju-lei-xing-fu-he-shu-ju-lei-xing-han-shu-fang-fa-zhe-si-zhang-de-xue-xi-bi-ji/">
+              <h3 class="post-title">
+                go阅读基础数据类型，复合数据类型，函数，方法这四章的学习笔记
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
