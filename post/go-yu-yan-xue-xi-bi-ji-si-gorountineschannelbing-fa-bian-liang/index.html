@@ -1,0 +1,343 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>go语言学习笔记四-gorountines/channel/并发变量 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1638109278378">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="go语言学习笔记四-gorountines/channel/并发变量 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="Goroutines
+在go语言中，每一个并发的执行单元叫作一个goroutine(用户态)。可以简单地把goroutine类比作一个线程，在go语言中只需要在方法前加上go即可不需和其他语言一样new 线程这一类。
+go中的gorouti..." />
+    <meta name="keywords" content="go,原创" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1638109278378" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              go语言学习笔记四-gorountines/channel/并发变量
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-11-28
+              </span>
+              <span>
+                10 min read
+              </span>
+              
+                <a href="https://whg001.github.io/tag/35CThEehJ/" class="post-tag">
+                  # go
+                </a>
+              
+                <a href="https://whg001.github.io/tag/qCSWQaDUs/" class="post-tag">
+                  # 原创
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://whg001.github.io/post-images/go-yu-yan-xue-xi-bi-ji-si-gorountineschannelbing-fa-bian-liang.jpg" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h3 id="goroutines">Goroutines</h3>
+<p>在go语言中，每一个并发的执行单元叫作一个goroutine(用户态)。可以简单地把goroutine类比作一个线程，在go语言中只需要在方法前加上go即可不需和其他语言一样new 线程这一类。</p>
+<p>go中的goroutine比线程这种量级小的多，在操作系统以及java他们中的线程分配的栈都是固定大小，java默认1M，OS线程都有一个固定大小的内存块（一般会是2MB）来做栈。一个goroutine会以一个很小的栈开始其生命周期，一般只需要2KB。一个goroutine的栈，和操作系统线程一样，会保存其活跃或挂起的函数调用的本地变量，但是和OS线程不太一样的是，一个goroutine的栈大小并不是固定的；栈的大小会根据需要动态地伸缩。而goroutine的栈的最大值有1GB，比传统的固定大小的线程栈要大得多，尽管一般情况下，大多goroutine都不需要这么大的栈。</p>
+<p>在书中大部分介绍的试一下使用goroutine来进行并发的示例。不做重复复述。</p>
+<h2 id="channels">Channels</h2>
+<p>goroutine是Go语言程序的并发体的话，那么channels则是它们之间的通信机制。一个channel是一个通信机制，它可以让一个goroutine通过它给另一个goroutine发送值信息。每个channel都有一个特殊的类型，也就是channels可发送数据的类型。一个可以发送int类型数据的channel一般写为chan int。</p>
+<pre><code class="language-Go">ch := make(chan int) // ch has type 'chan int'
+
+ch &lt;- x  // 像ch中发送一个x
+x := &lt;-ch // 在ch中取出一个变量并复制给x
+&lt;-ch     // 在ch中取出一个变量
+</code></pre>
+<p>Channel还支持close操作，用于关闭channel，随后对基于该channel的任何发送操作都将导致panic异常。对一个已经被close过的channel进行接收操作依然可以接受到之前已经成功发送的数据；如果channel中已经没有数据的话将产生一个零值的数据。</p>
+<p>使用内置的close函数就可以关闭一个channel：</p>
+<pre><code class="language-Go">close(ch)
+</code></pre>
+<h3 id="不带缓存的channel">不带缓存的channel</h3>
+<p>一个基于无缓存Channels的发送操作将导致发送者goroutine阻塞，直到另一个goroutine在相同的Channels上执行接收操作，当发送的值通过Channels成功传输之后，两个goroutine可以继续执行后面的语句。</p>
+<blockquote>
+<p>可以用作goroutine中的同步器，可以将多个goroutine在需要前置任务完成时进行串联</p>
+</blockquote>
+<h3 id="带缓存的channel">带缓存的channel</h3>
+<p>带缓存的Channel内部持有一个元素队列。队列的最大容量是在调用make函数创建channel时通过第二个参数指定的。</p>
+<pre><code class="language-Go">ch = make(chan string, 3)
+</code></pre>
+<figure data-type="image" tabindex="1"><img src="https://whg001.github.io/post-images/1638109188695.png" alt="" loading="lazy"></figure>
+<p>向缓存Channel的发送操作就是向内部<strong>缓存队列的尾部插入元素</strong>，接收操作则是从队列的<strong>头部删除元素</strong>。如果内部缓存队列是满的，那么发送操作将阻塞直到因另一个goroutine执行接收操作而释放了新的队列空间。相反，如果channel是空的，接收操作将阻塞直到有另一个goroutine执行发送操作而向队列插入元素</p>
+<blockquote>
+<p>例如 在生产者和消费者之间进行通信时，如果其速度相差太大，或者存在波动显然使用无缓存的channel是不合适的，有缓存的channel更能够将其因为波动性造成的阻塞减少。有缓存的channel可以相当于中间的缓存池</p>
+</blockquote>
+<h3 id="单方向的channel">单方向的channel</h3>
+<p>有时候为了使某个接口的实现更加单一，与颗粒度更细，将接口实现者对channel的权限减少可以使用单方向channel</p>
+<pre><code class="language-Go">// out 只能发送数据，in只能接收数据
+func squarer(out chan&lt;- int, in &lt;-chan int)；
+</code></pre>
+<h3 id="并发的循环">并发的循环</h3>
+<p>sync包中的WaitGroup可用等待一组协程的结束。 父协程通过Add方法来设定应等待的线程的数量。 每个被等待的协程在结束时调用Done方法。 同时，主协程里调用Wait方法阻塞至所有线程结束。</p>
+<h3 id="基于select的多路复用">基于select的多路复用</h3>
+<pre><code class="language-go">select {
+case &lt;-ch1:
+    // ...
+case x := &lt;-ch2:
+    // ...use x...
+case ch3 &lt;- y:
+    // ...
+default:
+    // ...
+}
+</code></pre>
+<p>上面是select语句的一般形式。和switch语句稍微有点相似，也会有几个case和最后的default选择分支。每一个case代表一个通信操作（在某个channel上进行发送或者接收），并且会包含一些语句组成的一个语句块。一个接收表达式可能只包含接收表达式自身（译注：不把接收到的值赋值给变量什么的），就像上面的第一个case，或者包含在一个简短的变量声明中，像第二个case里一样；第二种形式让你能够引用接收到的值。</p>
+<p><strong>select会等待case中有能够执行的case时去执行</strong>。当条件满足时，select才会去通信并执行case之后的语句；这时候其它通信是不会执行的。一个没有任何case的select语句写作select{}，会永远地等待下去。</p>
+<h2 id="基于共享变量的并发">基于共享变量的并发</h2>
+<h3 id="竞争条件">竞争条件</h3>
+<p>我更喜欢把他叫做竞态条件,竞态条件（Race Condition）。所谓竞态条件，指的是程序的执行结果依赖线程执行的顺序。在go里面改成协程更好</p>
+<p>避免数据竞争的方法</p>
+<ol>
+<li>避免从多个goroutine访问变量，将其这些变量都被限定在了一个单独的goroutine中，由于其它的goroutine不能够直接访问变量，它们只能使用一个channel来发送请求给指定的goroutine来查询更新变量。也是Go的推崇的“不要使用共享数据来通信；使用通信来共享数据”</li>
+<li>允许很多goroutine去访问变量，但是在同一个时刻最多只有一个goroutine在访问。这种方式被称为“互斥”</li>
+</ol>
+<h3 id="访问变量的模型">访问变量的模型</h3>
+<p><strong>并发领域2大核心问题：互斥，同一时刻只允许一个线程访问共享资源。同步，即线程之间如何通信，协作</strong></p>
+<h2 id="syncmutex互斥锁">sync.Mutex互斥锁</h2>
+<pre><code class="language-go">var (
+    mu      sync.Mutex // guards balance
+    balance int
+)
+func Balance() int {
+    mu.Lock()
+    defer mu.Unlock()
+    return balance
+}
+</code></pre>
+<p>当有多个goroutine进入Balance方法时，由于有Mutex互斥锁，同一时刻只能有一个goroutine获取到锁并进入mu.Lock()下的代码块。为了保证锁的释放建议使用defer。</p>
+<blockquote>
+<p>但是defer是方法执行完后才进行的，锁的代码块有点大，会使粒度变大</p>
+</blockquote>
+<p><strong>需要注意sync.Mutex并不是可重入锁，要避免死锁</strong>，go中通用的解决方法是将一个函数分离成多个函数。(有点不明白为啥不弄成可重入锁，在我看来许多地方都需要可重入锁)。</p>
+<h2 id="syncrwmutex读写锁">sync.RWMutex读写锁</h2>
+<p>并发中经常使用的模型有</p>
+<ol>
+<li>信号量模型，可以实现多个线程访问一个临界区，用于做限流器</li>
+<li>读写锁模型，让锁的粒度更加小，提高并发</li>
+</ol>
+<p>读写锁通用的三个基本条件</p>
+<blockquote>
+<p>1.允许多个线程同时读共享变量,2.中允许一个线程写共享变量3.如果一个写线程正在执行写操作，此时禁止读线程共享变量</p>
+</blockquote>
+<h2 id="内存同步">内存同步</h2>
+<p>出现并发问题的源头：由于cpu与内存，io设备之间的速度差异，为了更加充分利用使cpu。</p>
+<p>经常出现并发问题，一般有以下几个源头</p>
+<p>源头一：缓存导致的可见性问题，一个线程对于共享变量的修改，另一个线程能够立马看到，称其为可见性。多核cpu时代，每一个cpu都会有其缓存(三级缓存，一级缓存与二级缓存cpu独享，3级缓存各个cpu共享)，由于部分缓存对于其他cpu是不可见的于是导致了缓存一致性问题</p>
+<p>源头二：线程(goroutine)切换带来的原子性问题.通常在搞基语言中一条命令对应多个cpu指令，而操作系统的任务切换是在一条cpu指令执行完后进行切换，所以只能保证cpu指令的原子性</p>
+<p>源头三：编译优化，带来的有序性问题</p>
+<p>书中所讲的内存同步就是源头一</p>
+<h2 id="synconce惰性初始化">sync.Once惰性初始化</h2>
+<p>如果初始化成本比较大的话，那么将初始化延迟到需要的时候再去做就是一个比较好的选择。这样可以减少内存的使用等。</p>
+<p>但是惰性初始化在多个goroutine可能就会出现原子性问题，与可见性问题(熟悉java的可以类比java中的懒汉式模型)。</p>
+<p>sync包为我们提供了一个专门的方案来解决这种一次性初始化的问题：sync.Once。概念上来讲，一次性的初始化需要一个互斥量mutex和一个boolean变量来记录初始化是不是已经完成了；互斥量用来保护boolean变量和客户端数据结构。</p>
+<pre><code class="language-go">var loadIconsOnce sync.Once
+var icons map[string]image.Image
+// Concurrency-safe.
+func Icon(name string) image.Image {
+    loadIconsOnce.Do(loadIcons)//loadIcons是一个初始化的方法
+    return icons[name]
+}
+</code></pre>
+<p>每一次对Do(loadIcons)的调用都会锁定mutex，并会检查boolean变量（译注：Go1.9中会先判断boolean变量是否为1(true)，只有不为1才锁定mutex，不再需要每次都锁定mutex）。在第一次调用时，boolean变量的值是false，Do会调用loadIcons并会将boolean变量设置为true。随后的调用什么都不会做，但是mutex同步会保证loadIcons对内存（这里其实就是指icons变量啦）产生的效果能够对所有goroutine可见。用这种方式来使用sync.Once的话，我们能够避免在变量被构建完成之前和其它goroutine共享该变量。</p>
+<h2 id="竞争条件检测">竞争条件检测</h2>
+<p>go语言为了方便我们排查这种竞态条件引发的问题，Go的runtime和工具链为我们装备了一个复杂但好用的动态分析工具，竞争检查器（the race detector）。</p>
+<p>只要在go build，go run或者go test命令后面加上-race的flag，就会使编译器创建一个你的应用的“修改”版或者一个附带了能够记录所有运行期对共享变量访问工具的test，并且会记录下每一个读或者写共享变量的goroutine的身份信息</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#goroutines">Goroutines</a></li>
+</ul>
+</li>
+<li><a href="#channels">Channels</a>
+<ul>
+<li><a href="#%E4%B8%8D%E5%B8%A6%E7%BC%93%E5%AD%98%E7%9A%84channel">不带缓存的channel</a></li>
+<li><a href="#%E5%B8%A6%E7%BC%93%E5%AD%98%E7%9A%84channel">带缓存的channel</a></li>
+<li><a href="#%E5%8D%95%E6%96%B9%E5%90%91%E7%9A%84channel">单方向的channel</a></li>
+<li><a href="#%E5%B9%B6%E5%8F%91%E7%9A%84%E5%BE%AA%E7%8E%AF">并发的循环</a></li>
+<li><a href="#%E5%9F%BA%E4%BA%8Eselect%E7%9A%84%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8">基于select的多路复用</a></li>
+</ul>
+</li>
+<li><a href="#%E5%9F%BA%E4%BA%8E%E5%85%B1%E4%BA%AB%E5%8F%98%E9%87%8F%E7%9A%84%E5%B9%B6%E5%8F%91">基于共享变量的并发</a>
+<ul>
+<li><a href="#%E7%AB%9E%E4%BA%89%E6%9D%A1%E4%BB%B6">竞争条件</a></li>
+<li><a href="#%E8%AE%BF%E9%97%AE%E5%8F%98%E9%87%8F%E7%9A%84%E6%A8%A1%E5%9E%8B">访问变量的模型</a></li>
+</ul>
+</li>
+<li><a href="#syncmutex%E4%BA%92%E6%96%A5%E9%94%81">sync.Mutex互斥锁</a></li>
+<li><a href="#syncrwmutex%E8%AF%BB%E5%86%99%E9%94%81">sync.RWMutex读写锁</a></li>
+<li><a href="#%E5%86%85%E5%AD%98%E5%90%8C%E6%AD%A5">内存同步</a></li>
+<li><a href="#synconce%E6%83%B0%E6%80%A7%E5%88%9D%E5%A7%8B%E5%8C%96">sync.Once惰性初始化</a></li>
+<li><a href="#%E7%AB%9E%E4%BA%89%E6%9D%A1%E4%BB%B6%E6%A3%80%E6%B5%8B">竞争条件检测</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/go-yu-yan-xue-xi-bi-ji-san-jie-kou/">
+              <h3 class="post-title">
+                go语言学习笔记三-接口
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

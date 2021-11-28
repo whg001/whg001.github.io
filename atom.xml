@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://whg001.github.io</id>
     <title>haogui</title>
-    <updated>2021-11-28T13:29:01.617Z</updated>
+    <updated>2021-11-28T14:21:22.578Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://whg001.github.io"/>
     <link rel="self" href="https://whg001.github.io/atom.xml"/>
@@ -10,6 +10,13 @@
     <logo>https://whg001.github.io/images/avatar.png</logo>
     <icon>https://whg001.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, haogui</rights>
+    <entry>
+        <title type="html"><![CDATA[go语言学习笔记四-gorountines/channel/并发变量]]></title>
+        <id>https://whg001.github.io/post/go-yu-yan-xue-xi-bi-ji-si-gorountineschannelbing-fa-bian-liang/</id>
+        <link href="https://whg001.github.io/post/go-yu-yan-xue-xi-bi-ji-si-gorountineschannelbing-fa-bian-liang/">
+        </link>
+        <updated>2021-11-28T14:19:19.000Z</updated>
+    </entry>
     <entry>
         <title type="html"><![CDATA[go语言学习笔记三-接口]]></title>
         <id>https://whg001.github.io/post/go-yu-yan-xue-xi-bi-ji-san-jie-kou/</id>
@@ -72,12 +79,5 @@
         <link href="https://whg001.github.io/post/die-dai-qi/">
         </link>
         <updated>2021-09-07T02:52:22.000Z</updated>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[远程debug]]></title>
-        <id>https://whg001.github.io/post/yuan-cheng-debug/</id>
-        <link href="https://whg001.github.io/post/yuan-cheng-debug/">
-        </link>
-        <updated>2021-08-30T03:20:40.000Z</updated>
     </entry>
 </feed>
