@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://whg001.github.io</id>
     <title>haogui</title>
-    <updated>2021-12-12T09:07:41.896Z</updated>
+    <updated>2021-12-12T09:31:08.183Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://whg001.github.io"/>
     <link rel="self" href="https://whg001.github.io/atom.xml"/>
@@ -10,6 +10,13 @@
     <logo>https://whg001.github.io/images/avatar.png</logo>
     <icon>https://whg001.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, haogui</rights>
+    <entry>
+        <title type="html"><![CDATA[服务提供者框架在jdbc中的应用]]></title>
+        <id>https://whg001.github.io/post/fu-wu-ti-gong-zhe-kuang-jia-zai-jdbc-zhong-de-ying-yong/</id>
+        <link href="https://whg001.github.io/post/fu-wu-ti-gong-zhe-kuang-jia-zai-jdbc-zhong-de-ying-yong/">
+        </link>
+        <updated>2021-12-12T09:26:47.000Z</updated>
+    </entry>
     <entry>
         <title type="html"><![CDATA[go语言学习笔记四-gorountines/channel/并发变量]]></title>
         <id>https://whg001.github.io/post/go-yu-yan-xue-xi-bi-ji-si-gorountineschannelbing-fa-bian-liang/</id>
@@ -72,12 +79,5 @@
         <link href="https://whg001.github.io/post/js-ji-chu-xue-xi/">
         </link>
         <updated>2021-10-24T13:09:29.000Z</updated>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[迭代器]]></title>
-        <id>https://whg001.github.io/post/die-dai-qi/</id>
-        <link href="https://whg001.github.io/post/die-dai-qi/">
-        </link>
-        <updated>2021-09-07T02:52:22.000Z</updated>
     </entry>
 </feed>

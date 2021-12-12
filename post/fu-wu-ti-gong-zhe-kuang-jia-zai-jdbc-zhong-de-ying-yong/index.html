@@ -1,0 +1,423 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>服务提供者框架在jdbc中的应用 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1639301461581">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="服务提供者框架在jdbc中的应用 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="java数据库无缝切换原理及其设计思路
+大家在使用jdbc连接数据库时应该都感觉到了，在java中切换一种数据库，通常只需要改变某个加载类和一些配置文件即可。其具体输入和实现的呢？在此我结合源码来分析一波。
+jdbc连接oracle
+   ..." />
+    <meta name="keywords" content="设计模式,原创" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1639301461581" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              服务提供者框架在jdbc中的应用
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-12-12
+              </span>
+              <span>
+                8 min read
+              </span>
+              
+                <a href="https://whg001.github.io/tag/8foghkNJO/" class="post-tag">
+                  # 设计模式
+                </a>
+              
+                <a href="https://whg001.github.io/tag/qCSWQaDUs/" class="post-tag">
+                  # 原创
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://whg001.github.io/post-images/fu-wu-ti-gong-zhe-kuang-jia-zai-jdbc-zhong-de-ying-yong.png" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h1 id="java数据库无缝切换原理及其设计思路">java数据库无缝切换原理及其设计思路</h1>
+<p>大家在使用jdbc连接数据库时应该都感觉到了，在java中切换一种数据库，通常只需要改变某个加载类和一些配置文件即可。其具体输入和实现的呢？在此我结合源码来分析一波。</p>
+<h4 id="jdbc连接oracle">jdbc连接oracle</h4>
+<pre><code class="language-java">        Connection connect = null;
+        Statement statement = null;
+        ResultSet resultSet = null;
+
+        try {
+            //第一步：注册驱动
+            //第一种方式：类加载(常用)
+            //Class.forName(&quot;oracle.jdbc.OracleDriver&quot;);
+
+            //第二种方式：利用Driver对象
+            Driver driver = new OracleDriver();
+            DriverManager.deregisterDriver(driver);
+
+            //第三种方式:利用系统参数  需在idea中配置program arguments为下面的参数
+            //-Djdbc.drivers = oracle.jdbc.OracleDriver
+
+
+
+            //第二步：获取连接
+            //第一种方式：利用DriverManager（常用）
+            //connect = DriverManager.getConnection(&quot;jdbc:oracle:thin:@localhost:1521:XE&quot;, &quot;你的oracle数据库用户名&quot;, &quot;用户名密码&quot;);
+
+            //第二种方式：直接使用Driver
+            Properties pro = new Properties();
+            pro.put(&quot;user&quot;, &quot;你的oracle数据库用户名&quot;);
+            pro.put(&quot;password&quot;, &quot;用户名密码&quot;);
+            connect = driver.connect(&quot;jdbc:oracle:thin:@localhost:1521:XE&quot;, pro);
+</code></pre>
+<h4 id="jdbc连接mysql">jdbc连接mysql</h4>
+<pre><code class="language-java">      // MySQL 8.0 以下版本 - JDBC 驱动名及数据库 URL
+    static final String JDBC_DRIVER = &quot;com.mysql.jdbc.Driver&quot;;  
+    static final String DB_URL = &quot;jdbc:mysql://localhost:3306/RUNOOB&quot;;
+ 
+    // MySQL 8.0 以上版本 - JDBC 驱动名及数据库 URL
+    //static final String JDBC_DRIVER = &quot;com.mysql.cj.jdbc.Driver&quot;;  
+    //static final String DB_URL = &quot;jdbc:mysql://localhost:3306/RUNOOB?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=UTC&quot;;
+ 
+ 
+    // 数据库的用户名与密码，需要根据自己的设置
+    static final String USER = &quot;root&quot;;
+    static final String PASS = &quot;123456&quot;;
+ 
+    public static void main(String[] args) {
+        Connection conn = null;
+        Statement stmt = null;
+        try{
+            // 注册 JDBC 驱动
+            Class.forName(JDBC_DRIVER);
+        
+            // 打开链接
+            System.out.println(&quot;连接数据库...&quot;);
+            conn = DriverManager.getConnection(DB_URL,USER,PASS);
+    }
+</code></pre>
+<p>2者之间的区别就是加载了不一样的驱动，各自驱动的具体实现由各自的生厂商决定，但由于java给了其具体实现定义了接口，所以当我们使用 Class.forName(“xxx”);来加载驱动类时，我们甚至可以不改变代买来实现无缝切换。但是其具体时如何实现的呢？</p>
+<h4 id="具体实现">具体实现</h4>
+<p>Class.forName(JDBC_DRIVER) ，是加载类的几种方式之一，调用这个方法会将相应的类加载到我们的程序中。</p>
+<p>可能此时你会疑惑因为调用了此方法后，我们只要使用conn = DriverManager.getConnection(DB_URL,USER,PASS);即可获得相应的数据库连接，这是如何做到的呢？</p>
+<p>当我们执行完Class.forName(JDBC_DRIVER);时，这个类的类加载过程已经执行完毕，于是我们可以去看一看这个类里面有什么静态块，看在其中是否有什么玄机</p>
+<p>源码如下</p>
+<pre><code class="language-java">public class Driver extends NonRegisteringDriver implements java.sql.Driver {
+    public Driver() throws SQLException {
+    }
+
+    static {
+        try {
+            DriverManager.registerDriver(new Driver());
+        } catch (SQLException var1) {
+            throw new RuntimeException(&quot;Can't register driver!&quot;);
+        }
+    }
+}
+
+</code></pre>
+<p>是不是突然就感觉明了了，在他的静态作用域中他执行了DriverManager.registerDriver(new Driver());方法，相信从名字上你就能猜出，他将此driver注册到了DriverManager中，而你的connection也是从DriverManager中获取。继续往下走</p>
+<pre><code class="language-java">    // List of registered JDBC drivers
+    private final static CopyOnWriteArrayList&lt;DriverInfo&gt; registeredDrivers = new CopyOnWriteArrayList&lt;&gt;();
+</code></pre>
+<p>registeredDrivers 是一个能保证原子性队列。DriverManager.registerDriver(new Driver())也就是将其加入到了此队列中。</p>
+<pre><code class="language-java">    public static synchronized void registerDriver(java.sql.Driver driver,
+            DriverAction da)
+        throws SQLException {
+
+        /* Register the driver if it has not already been added to our list */
+        if(driver != null) {
+            registeredDrivers.addIfAbsent(new DriverInfo(driver, da));
+        } else {
+            // This is for compatibility with the original DriverManager
+            throw new NullPointerException();
+        }
+
+        println(&quot;registerDriver: &quot; + driver);
+
+    }
+</code></pre>
+<p>接下来看DriverManager.getConnection(DB_URL,USER,PASS)这一行代码，他干了啥</p>
+<pre><code class="language-java"> public static Connection getConnection(String url,
+        String user, String password) throws SQLException {
+        java.util.Properties info = new java.util.Properties();
+
+        if (user != null) {
+            info.put(&quot;user&quot;, user);
+        }
+        if (password != null) {
+            info.put(&quot;password&quot;, password);
+        }
+
+        return (getConnection(url, info, Reflection.getCallerClass()));
+    }
+</code></pre>
+<p>Reflection.getCallerClass() 获得获得调用此方法的类。(参数 1 -  返回自己的类  2 -  返回调用者的类  \3. 4. ....层层上传 )</p>
+<p>下面源码我解释部分关键性的代码，并省略了一些代码</p>
+<pre><code class="language-java">    private static Connection getConnection(
+        String url, java.util.Properties info, Class&lt;?&gt; caller) throws SQLException {
+   		//获得调用类的类加载器
+        ClassLoader callerCL = caller != null ? caller.getClassLoader() : null;
+        synchronized(DriverManager.class) {
+            // synchronize loading of the correct classloader.
+            if (callerCL == null) {
+                callerCL = Thread.currentThread().getContextClassLoader();
+            }
+        }
+
+        if(url == null) {
+            throw new SQLException(&quot;The url cannot be null&quot;, &quot;08001&quot;);
+        }
+
+        println(&quot;DriverManager.getConnection(\&quot;&quot; + url + &quot;\&quot;)&quot;);
+
+        // Walk through the loaded registeredDrivers attempting to make a connection.
+        // Remember the first exception that gets raised so we can reraise it.
+        SQLException reason = null;
+
+        //遍历已经加载过的数据库驱动类
+        for(DriverInfo aDriver : registeredDrivers) {
+            // If the caller does not have permission to load the driver then
+            // skip it.
+            //当callerCL和driver的类加载器是同一个时则继续往下走(即如果这个driver的类加载器和调用类的类加载器一致时，则返回这个driver的con)
+            if(isDriverAllowed(aDriver.driver, callerCL)) {
+                try {
+                    println(&quot;    trying &quot; + aDriver.driver.getClass().getName());
+                    Connection con = aDriver.driver.connect(url, info);
+                    if (con != null) {
+                        // Success!
+                        println(&quot;getConnection returning &quot; + aDriver.driver.getClass().getName());
+                        return (con);
+                    }
+                } catch (SQLException ex) {
+                    if (reason == null) {
+                        reason = ex;
+                    }
+                }
+
+            } else {
+                println(&quot;    skipping: &quot; + aDriver.getClass().getName());
+            }
+
+        }
+
+    }
+</code></pre>
+<pre><code class="language-java">    private static boolean isDriverAllowed(Driver driver, ClassLoader classLoader) {
+        boolean result = false;
+        if(driver != null) {
+            Class&lt;?&gt; aClass = null;
+            try {
+                aClass =  Class.forName(driver.getClass().getName(), true, classLoader);
+            } catch (Exception ex) {
+                result = false;
+            }
+
+             result = ( aClass == driver.getClass() ) ? true : false;
+        }
+
+        return result;
+    }
+</code></pre>
+<p><strong>源码阅读到此你应该已经大概清楚了他是如何确立并返回对应的connection。在此我在梳理一下java提供的接口，在java.sql 的包下面你能看到 driver接口，Connection接口，Statement接口，这几个核心接口的实现类由对应的数据库厂商编写。java编写了DriverManager类，DriverInfo类</strong></p>
+<h4 id="设计思路">设计思路</h4>
+<p>java服务接口 Driver，让厂商编写对应的实现类，并在接口中定义了静态代码块，将其注册到DriverManager中去。</p>
+<p>Connection，Statement接口同理也是让对应的厂商根据其厂商的内部逻辑来编写不一样的实现，但对于调用者来说，这一部分是屏蔽了的，也无需关心。</p>
+<p>java中的DriverManager，提供了2个核心api</p>
+<ol>
+<li>registerDriver(Driver driver)  , 提供者的注册API，将对应的对象加入其队列中</li>
+<li>getConnection(),服务访问API，其实就是一个工厂模式产生对象的工厂方法。在jdbc中通过类加载器进行判断，获得哪一种connection。</li>
+</ol>
+<p>说到这你可能就会想到这就是<strong>服务提供者框架</strong>，因为其三大要素有意齐全。</p>
+<ol>
+<li>服务接口(这是提供者实现)</li>
+<li>提供者注册API(系统用于注册实现)</li>
+<li>服务访问API(客户端用于获取服务实例)</li>
+</ol>
+<p>以前跟人对工厂模式的理解为 他能创造单例，能造出子类对象，能根据不同参数生产出不同的对象，且在名字上看起来更加直观。但此次在源码阅读中我直观的感受到了其魅力，如果接口提供的好，通过注册可以在日后不需要修改代码的情况下进行功能的拓展。实现<strong>对拓展开放，修改关闭</strong>的设计原理</p>
+<h3 id="go中的应用">go中的应用</h3>
+<pre><code class="language-go">import (
+    &quot;database/sql&quot;
+    _ &quot;github.com/lib/pq&quot;              // enable support for Postgres
+    _ &quot;github.com/go-sql-driver/mysql&quot; // enable support for MySQL
+)
+
+db, err = sql.Open(&quot;postgres&quot;, dbname) // OK
+db, err = sql.Open(&quot;mysql&quot;, dbname)    // OK
+db, err = sql.Open(&quot;sqlite3&quot;, dbname)  // returns error: unknown driver &quot;sqlite3&quot;
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#java%E6%95%B0%E6%8D%AE%E5%BA%93%E6%97%A0%E7%BC%9D%E5%88%87%E6%8D%A2%E5%8E%9F%E7%90%86%E5%8F%8A%E5%85%B6%E8%AE%BE%E8%AE%A1%E6%80%9D%E8%B7%AF">java数据库无缝切换原理及其设计思路</a><br>
+*<br>
+*<br>
+* <a href="#jdbc%E8%BF%9E%E6%8E%A5oracle">jdbc连接oracle</a><br>
+* <a href="#jdbc%E8%BF%9E%E6%8E%A5mysql">jdbc连接mysql</a><br>
+* <a href="#%E5%85%B7%E4%BD%93%E5%AE%9E%E7%8E%B0">具体实现</a><br>
+* <a href="#%E8%AE%BE%E8%AE%A1%E6%80%9D%E8%B7%AF">设计思路</a>
+<ul>
+<li><a href="#go%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8">go中的应用</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/go-yu-yan-xue-xi-bi-ji-si-gorountineschannelbing-fa-bian-liang/">
+              <h3 class="post-title">
+                go语言学习笔记四-gorountines/channel/并发变量
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
