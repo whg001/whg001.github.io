@@ -1,0 +1,520 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title> springBoot 配置的自动加载 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1639306399400">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title=" springBoot 配置的自动加载 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="@SpringBootApplication
+​	这个注解中
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@Spr..." />
+    <meta name="keywords" content="spring,原创" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1639306399400" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+               springBoot 配置的自动加载
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-12-12
+              </span>
+              <span>
+                9 min read
+              </span>
+              
+                <a href="https://whg001.github.io/tag/r4trUECO8/" class="post-tag">
+                  # spring
+                </a>
+              
+                <a href="https://whg001.github.io/tag/qCSWQaDUs/" class="post-tag">
+                  # 原创
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://whg001.github.io/post-images/springboot-pei-zhi-de-zi-dong-jia-zai.png" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h2 id="springbootapplication">@SpringBootApplication</h2>
+<p>​	这个注解中</p>
+<pre><code class="language-java">@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@SpringBootConfiguration
+@EnableAutoConfiguration
+@ComponentScan(excludeFilters = {
+		@Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
+		@Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) })
+public @interface SpringBootApplication {
+    .....
+}
+</code></pre>
+<p>我们可以进入@EnableAutoConfiguration，中这 个注解里面是和配置相关，自动注入相关，开启自动注入</p>
+<pre><code class="language-java">@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@AutoConfigurationPackage
+@Import(AutoConfigurationImportSelector.class)
+public @interface EnableAutoConfiguration {
+    ....
+}
+</code></pre>
+<p>@import表示需要将里面的class进行导入，于是我们进入AutoConfigurationImportSelector类中，在这个类中能看到很多其中有几个类加载器，我们可以看其中的selectImports方法</p>
+<pre><code class="language-java">@Override
+	public String[] selectImports(AnnotationMetadata annotationMetadata) {
+		if (!isEnabled(annotationMetadata)) {
+			return NO_IMPORTS;
+		}
+		AutoConfigurationMetadata autoConfigurationMetadata = AutoConfigurationMetadataLoader
+				.loadMetadata(this.beanClassLoader);
+		AnnotationAttributes attributes = getAttributes(annotationMetadata);
+        //获得默认配置
+		List&lt;String&gt; configurations = getCandidateConfigurations(annotationMetadata,
+				attributes);
+		configurations = removeDuplicates(configurations);
+		Set&lt;String&gt; exclusions = getExclusions(annotationMetadata, attributes);
+		checkExcludedClasses(configurations, exclusions);
+		configurations.removeAll(exclusions);
+		configurations = filter(configurations, autoConfigurationMetadata);
+		fireAutoConfigurationImportEvents(configurations, exclusions);
+		return StringUtils.toStringArray(configurations);
+	}
+</code></pre>
+<p>我们随后可以进入这个获取默认配置的方法</p>
+<pre><code class="language-java">	/**
+	 * Return the auto-configuration class names that should be considered. By default
+	 * this method will load candidates using {@link SpringFactoriesLoader} with
+	 * {@link #getSpringFactoriesLoaderFactoryClass()}.
+	 * @param metadata the source metadata
+	 * @param attributes the {@link #getAttributes(AnnotationMetadata) annotation
+	 * attributes}
+	 * @return a list of candidate configurations
+	 */
+	protected List&lt;String&gt; getCandidateConfigurations(AnnotationMetadata metadata,
+			AnnotationAttributes attributes) {
+		List&lt;String&gt; configurations = SpringFactoriesLoader.loadFactoryNames(
+				getSpringFactoriesLoaderFactoryClass(), getBeanClassLoader());
+		Assert.notEmpty(configurations,
+				&quot;No auto configuration classes found in META-INF/spring.factories. If you &quot;
+						+ &quot;are using a custom packaging, make sure that file is correct.&quot;);
+		return configurations;
+	}
+</code></pre>
+<p>META-INF/spring.factories,中的就是默认配置，我们可以点开这个类所在的位置</p>
+<p><img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f172625c04ca4ebe90062209c9378fd9~tplv-k3u1fbpfcp-watermark.image" alt="" loading="lazy"><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0987bce1c6f74cbeb101b672a4627de1~tplv-k3u1fbpfcp-watermark.image" alt="" loading="lazy"></p>
+<p>查看其中的spring.factories，你会发现里面全部都是默认的配置。</p>
+<p>或者从springApplication类出发</p>
+<pre><code class="language-java">	/**
+	 * Create a new {@link SpringApplication} instance. The application context will load
+	 * beans from the specified primary sources (see {@link SpringApplication class-level}
+	 * documentation for details. The instance can be customized before calling
+	 * {@link #run(String...)}.
+	 * @param resourceLoader the resource loader to use
+	 * @param primarySources the primary bean sources
+	 * @see #run(Class, String[])
+	 * @see #setSources(Set)
+	 */
+	@SuppressWarnings({ &quot;unchecked&quot;, &quot;rawtypes&quot; })
+	public SpringApplication(ResourceLoader resourceLoader, Class&lt;?&gt;... primarySources) {
+		this.resourceLoader = resourceLoader;
+		Assert.notNull(primarySources, &quot;PrimarySources must not be null&quot;);
+		this.primarySources = new LinkedHashSet&lt;&gt;(Arrays.asList(primarySources));
+		this.webApplicationType = WebApplicationType.deduceFromClasspath();
+        
+		setInitializers((Collection) getSpringFactoriesInstances(
+				ApplicationContextInitializer.class));
+		setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
+		this.mainApplicationClass = deduceMainApplicationClass();
+	}
+</code></pre>
+<p>你能够找到着个方法，随后查看getSpringFactoriesInstance()方法，追溯下去你能看到loadSpringFactories()</p>
+<pre><code class="language-java">	private static Map&lt;String, List&lt;String&gt;&gt; loadSpringFactories(@Nullable ClassLoader classLoader) {
+		MultiValueMap&lt;String, String&gt; result = cache.get(classLoader);
+		if (result != null) {
+			return result;
+		}
+
+		try {
+            //FACTORIES_RESOURCE_LOCATION=&quot;META-INF/spring.factories&quot;
+			Enumeration&lt;URL&gt; urls = (classLoader != null ?
+					classLoader.getResources(FACTORIES_RESOURCE_LOCATION) :
+					ClassLoader.getSystemResources(FACTORIES_RESOURCE_LOCATION));
+			result = new LinkedMultiValueMap&lt;&gt;();
+			while (urls.hasMoreElements()) {
+				URL url = urls.nextElement();
+				UrlResource resource = new UrlResource(url);
+				Properties properties = PropertiesLoaderUtils.loadProperties(resource);
+				for (Map.Entry&lt;?, ?&gt; entry : properties.entrySet()) {
+					List&lt;String&gt; factoryClassNames = Arrays.asList(
+							StringUtils.commaDelimitedListToStringArray((String) entry.getValue()));
+					result.addAll((String) entry.getKey(), factoryClassNames);
+				}
+			}
+			cache.put(classLoader, result);
+			return result;
+		}
+		catch (IOException ex) {
+			throw new IllegalArgumentException(&quot;Unable to load factories from location [&quot; +
+					FACTORIES_RESOURCE_LOCATION + &quot;]&quot;, ex);
+		}
+	}
+</code></pre>
+<p>在这里你也可以看到他将META-INF/spring.factories中的配置全部加载进来了，随后setInitializers()</p>
+<h2 id="springboot-内置tomcat的加载">springboot 内置tomcat的加载</h2>
+<p>在spring.factories搜索WebServer相关的配置</p>
+<p>我们可以点击查看其中ServletWebServerFactoryAutoConfiguration类，摘抄些许代码如下</p>
+<pre><code class="language-java">	@Bean
+	public ServletWebServerFactoryCustomizer servletWebServerFactoryCustomizer(
+			ServerProperties serverProperties) {
+		return new ServletWebServerFactoryCustomizer(serverProperties);
+	}
+
+	@Bean
+	@ConditionalOnClass(name = &quot;org.apache.catalina.startup.Tomcat&quot;)
+	public TomcatServletWebServerFactoryCustomizer tomcatServletWebServerFactoryCustomizer(
+			ServerProperties serverProperties) {
+		return new TomcatServletWebServerFactoryCustomizer(serverProperties);
+	}
+
+
+
+/**
+ * {@link Conditional} that only matches when the specified classes are on the classpath.
+ *
+ * @author Phillip Webb
+ */
+@Target({ ElementType.TYPE, ElementType.METHOD })
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Conditional(OnClassCondition.class)
+public @interface ConditionalOnClass {
+
+	/**
+	 * The classes that must be present. Since this annotation is parsed by loading class
+	 * bytecode, it is safe to specify classes here that may ultimately not be on the
+	 * classpath, only if this annotation is directly on the affected component and
+	 * &lt;b&gt;not&lt;/b&gt; if this annotation is used as a composed, meta-annotation. In order to
+	 * use this annotation as a meta-annotation, only use the {@link #name} attribute.
+	 * @return the classes that must be present
+	 */
+	Class&lt;?&gt;[] value() default {};
+
+	/**
+	 * The classes names that must be present.
+	 * @return the class names that must be present.
+	 */
+	String[] name() default {};
+
+}
+</code></pre>
+<p>ConditionalOnClass注解，从注解的注释中读到，在加载类之前，注解中的class必须存在。@ConditionalOnClass(name = &quot;org.apache.catalina.startup.Tomcat&quot;)，于是可以了解到&quot;org.apache.catalina.startup.Tomcat必须存在。点进去了你就会发现Tomcat类，他就是apache的tomcat，可总上看到他了</p>
+<pre><code class="language-java"> * &lt;p&gt;
+ * There are a variety of 'add' methods to configure servlets and webapps. These
+ * methods, by default, create a simple in-memory security realm and apply it.
+ * If you need more complex security processing, you can define a subclass of
+ * this class.
+ *
+ * &lt;p&gt;
+ * This class provides a set of convenience methods for configuring webapp
+ * contexts, all overloads of the method &lt;code&gt;addWebapp&lt;/code&gt;. These methods
+ * create a webapp context, configure it, and then add it to a {@link Host}.
+ * They do not use a global default web.xml; rather, they add a lifecycle
+ * listener that adds the standard DefaultServlet, JSP processing, and welcome
+ * files.
+ *
+ * &lt;p&gt;
+</code></pre>
+<p>add方法将其加入webapps。</p>
+<h2 id="aop加载">aop加载</h2>
+<p>同样在spring.factories中搜索aop,你就会看到如下代码</p>
+<pre><code class="language-java">/*
+ * Copyright 2012-2018 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.springframework.boot.autoconfigure.aop;
+
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.Advice;
+import org.aspectj.weaver.AnnotatedElement;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
+
+/**
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
+ * Auto-configuration} for Spring's AOP support. Equivalent to enabling
+ * {@link org.springframework.context.annotation.EnableAspectJAutoProxy} in your
+ * configuration.
+ * &lt;p&gt;
+ * The configuration will not be activated if {@literal spring.aop.auto=false}. The
+ * {@literal proxyTargetClass} attribute will be {@literal true}, by default, but can be
+ * overridden by specifying {@literal spring.aop.proxy-target-class=false}.
+ *
+ * @author Dave Syer
+ * @author Josh Long
+ * @see EnableAspectJAutoProxy
+ */
+@Configuration
+@ConditionalOnClass({ EnableAspectJAutoProxy.class, Aspect.class, Advice.class,
+		AnnotatedElement.class })
+@ConditionalOnProperty(prefix = &quot;spring.aop&quot;, name = &quot;auto&quot;, havingValue = &quot;true&quot;, matchIfMissing = true)
+public class AopAutoConfiguration {
+
+	@Configuration
+	@EnableAspectJAutoProxy(proxyTargetClass = false)
+	@ConditionalOnProperty(prefix = &quot;spring.aop&quot;, name = &quot;proxy-target-class&quot;, havingValue = &quot;false&quot;, matchIfMissing = false)
+	public static class JdkDynamicAutoProxyConfiguration {
+
+	}
+
+	@Configuration
+	@EnableAspectJAutoProxy(proxyTargetClass = true)
+	@ConditionalOnProperty(prefix = &quot;spring.aop&quot;, name = &quot;proxy-target-class&quot;, havingValue = &quot;true&quot;, matchIfMissing = true)
+	public static class CglibAutoProxyConfiguration {
+
+	}
+
+}
+
+</code></pre>
+<p>是不是突然感觉到，EnableAspectJAutoProxy.class, Aspect.class, Advice.class,在你使用apo的时候都是那么的熟悉。</p>
+<p>接着看他内部的方法，你会看到JdkDynamic与Cglib，这就是aop动态生成的2种，一种利用jdk的Dynamic动态代理，通过接口生成一个新的类，而Cglib在可以在父类的基础上直接生成代理类。</p>
+<p>顺便说一下他们的区别吧</p>
+<p>proxy by subclassing. Spring uses CGLIB for proxy if class is not implementing interface.</p>
+<table>
+<thead>
+<tr>
+<th>Sr. No.</th>
+<th style="text-align:center">Key</th>
+<th style="text-align:center">JDK dynamic proxy</th>
+<th style="text-align:center">CGLIB proxy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td style="text-align:center">Basic</td>
+<td style="text-align:center">It can be only proxy by interface so target class needs to implement interface</td>
+<td style="text-align:center">It can create proxy by subclassing</td>
+</tr>
+<tr>
+<td>2</td>
+<td style="text-align:center">Package</td>
+<td style="text-align:center">It is available with the Java</td>
+<td style="text-align:center">It is a third  library.</td>
+</tr>
+<tr>
+<td>3</td>
+<td style="text-align:center">Performance</td>
+<td style="text-align:center">It is a bit slow than CGLIB proxy</td>
+<td style="text-align:center">It is faster than JDK dynamic proxy</td>
+</tr>
+<tr>
+<td>4.</td>
+<td style="text-align:center">Final</td>
+<td style="text-align:center">Final class and Final method can not be proxy</td>
+<td style="text-align:center">Final class and Final method can not be proxy</td>
+</tr>
+<tr>
+<td>5..</td>
+<td style="text-align:center">Use case</td>
+<td style="text-align:center">Spring uses JDK proxy when is class is implementing one or more interface</td>
+<td style="text-align:center">Spring uses CGLib proxy when class in not implementing interface</td>
+</tr>
+</tbody>
+</table>
+<p>其他的配置也于此类似</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#springbootapplication">@SpringBootApplication</a></li>
+<li><a href="#springboot-%E5%86%85%E7%BD%AEtomcat%E7%9A%84%E5%8A%A0%E8%BD%BD">springboot 内置tomcat的加载</a></li>
+<li><a href="#aop%E5%8A%A0%E8%BD%BD">aop加载</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/go-yu-yan-xue-xi-bi-ji-wu-gong-ju-ce-shi/">
+              <h3 class="post-title">
+                go语言学习笔记五-工具测试
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

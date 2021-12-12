@@ -1,0 +1,542 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>session | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1639306399400">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="session | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="最近在工作共使用session，却没有做session的一致性踩了一个坑，导致线上环境只能单节点跑，今天来复盘一下。
+session与cookie得差异：
+
+session存于服务器，cookie存于客户端，session相比cookie更..." />
+    <meta name="keywords" content="原创,java" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1639306399400" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              session
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-12-12
+              </span>
+              <span>
+                7 min read
+              </span>
+              
+                <a href="https://whg001.github.io/tag/qCSWQaDUs/" class="post-tag">
+                  # 原创
+                </a>
+              
+                <a href="https://whg001.github.io/tag/PNv5KdDzK/" class="post-tag">
+                  # java
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <p>最近在工作共使用session，却没有做session的一致性踩了一个坑，导致线上环境只能单节点跑，今天来复盘一下。</p>
+<p>session与cookie得差异：</p>
+<blockquote>
+<p>session存于服务器，cookie存于客户端，session相比cookie更加安全，容量更加大。当然session消耗服务器资源，cookie存储于客户端与服务器压力更小。session一次会话有效，cookie具体时间可以由你来定</p>
+</blockquote>
+<h2 id="tomcat中的session">tomcat中的session</h2>
+<p>​	浏览器向服务器发送请求时会带有一个sessionId,tomcat通过这个sessionId进行判断此浏览器以获得存于服务器中的session。</p>
+<p>tomcat中实现是javax.servle.http的类或接口有Request.class，ApplicationHttpRequest.Class....，</p>
+<p>在servlet中获取session，通常是调用request的getSession方法。这个方法需要传入一个boolean参数，这个参数就是实现刚才说的，当jsessionid为空或从session池中获取不到相应的session对象时，选择创建一个新的session还是不创建。</p>
+<p>Request.class的核心代码逻辑；</p>
+<pre><code class="language-java">protected Session doGetSession(boolean create) {  
+  
+        ……  
+        // 先获取所在context的manager对象  
+        Manager manager = null;  
+        if (context != null)  
+            manager = context.getManager();  
+        if (manager == null)  
+            return (null);      // Sessions are not supported  
+          
+        //这个requestedSessionId就是从Http request中解析出来的  
+        if (requestedSessionId != null) {  
+            try {  
+                //manager管理的session池中找相应的session对象  
+                session = manager.findSession(requestedSessionId);  
+            } catch (IOException e) {  
+                session = null;  
+            }  
+            //判断session是否为空及是否过期超时  
+            if ((session != null) &amp;&amp; !session.isValid())  
+                session = null;  
+            if (session != null) {  
+                //session对象有效，记录此次访问时间  
+                session.access();  
+                return (session);  
+            }  
+        }  
+  
+        // 如果参数是false，则不创建新session对象了，直接退出了  
+        if (!create)  
+            return (null);  
+        if ((context != null) &amp;&amp; (response != null) &amp;&amp;  
+            context.getCookies() &amp;&amp;  
+            response.getResponse().isCommitted()) {  
+            throw new IllegalStateException  
+              (sm.getString(&quot;coyoteRequest.sessionCreateCommitted&quot;));  
+        }  
+  
+        // 开始创建新session对象  
+        if (connector.getEmptySessionPath()   
+                &amp;&amp; isRequestedSessionIdFromCookie()) {  
+            session = manager.createSession(getRequestedSessionId());  
+        } else {  
+            session = manager.createSession(null);  
+        }  
+  
+        // 将新session的jsessionid写入cookie，传给browser  
+        if ((session != null) &amp;&amp; (getContext() != null)  
+               &amp;&amp; getContext().getCookies()) {  
+            Cookie cookie = new Cookie(Globals.SESSION_COOKIE_NAME,  
+                                       session.getIdInternal());  
+            configureSessionCookie(cookie);  
+            response.addCookieInternal(cookie);  
+        }  
+        //记录session最新访问时间  
+        if (session != null) {  
+            session.access();  
+            return (session);  
+        } else {  
+            return (null);  
+        }  
+    }  
+</code></pre>
+<p>以下是,ApplicationHttpRequest的getSession源码</p>
+<pre><code class="language-java"> /**
+     * Return the session associated with this Request, creating one
+     * if necessary and requested.
+     *
+     * @param create Create a new session if one does not exist
+     */
+    @Override
+    public HttpSession getSession(boolean create) {
+
+        if (crossContext) {
+
+            // There cannot be a session if no context has been assigned yet
+            if (context == null)
+                return (null);
+
+            // Return the current session if it exists and is valid
+            // 如果存在session则直接返回
+            if (session != null &amp;&amp; session.isValid()) {
+                return (session.getSession());
+            }
+
+            HttpSession other = super.getSession(false);
+            if (create &amp;&amp; (other == null)) {
+                // First create a session in the first context: the problem is
+                // that the top level request is the only one which can
+                // create the cookie safely
+                other = super.getSession(true);
+            }
+            if (other != null) {
+                Session localSession = null;
+                try {
+                    localSession =
+                        context.getManager().findSession(other.getId());
+                    if (localSession != null &amp;&amp; !localSession.isValid()) {
+                        localSession = null;
+                    }
+                } catch (IOException e) {
+                    // Ignore
+                }
+                if (localSession == null &amp;&amp; create) {
+                    localSession =
+                        context.getManager().createSession(other.getId());
+                }
+                if (localSession != null) {
+                    // 更新访问时间
+                    localSession.access();
+                    session = localSession;
+                    return session.getSession();
+                }
+            }
+            return null;
+
+        } else {
+            return super.getSession(create);
+        }
+
+    }
+</code></pre>
+<h3 id="standardsession">StandardSession</h3>
+<p>从ApplicationHttpRequest中可以追溯到StandardSession，下面是StandardSession的部分重要源码，我摘抄下来方便大家理解，你可以看到他封装成了一个StandardSessionFacade,提供方法给外部使用，而且里面的attributes是一个concurrentHashMap。</p>
+<pre><code class="language-java">    
+    /**
+     * The collection of user data attributes associated with this Session.
+     */
+    protected ConcurrentMap&lt;String, Object&gt; attributes = new ConcurrentHashMap&lt;&gt;();	
+
+
+	/**
+     * Set the session identifier for this session.
+     * 给这个session建立一个唯一的标志
+     * @param id The new session identifier
+     */
+    @Override
+    public void setId(String id) {
+        setId(id, true);
+    }
+
+
+	/**
+     * Return the &lt;code&gt;HttpSession&lt;/code&gt; for which this object
+     * is the facade.
+     */
+    @Override
+    public HttpSession getSession() {
+
+        if (facade == null){
+            if (SecurityUtil.isPackageProtectionEnabled()){
+                final StandardSession fsession = this;
+                facade = AccessController.doPrivileged(
+                        new PrivilegedAction&lt;StandardSessionFacade&gt;(){
+                    @Override
+                    public StandardSessionFacade run(){
+                        return new StandardSessionFacade(fsession);
+                    }
+                });
+            } else {
+                facade = new StandardSessionFacade(this);
+            }
+        }
+        return (facade);
+
+    }
+</code></pre>
+<h2 id="sessionid">sessionId</h2>
+<h3 id="setidstring-id">setId(String id)</h3>
+<p>StandardSession 中的 setId(String id)) 方法时提供给制造session者创造唯一sessionId标志，用过调用链，可以追溯到</p>
+<p>ManagerBase类，一下为ManagerBase的部分源码</p>
+<pre><code class="language-java"> @Override
+    public Session createSession(String sessionId) {
+
+        if ((maxActiveSessions &gt;= 0) &amp;&amp;
+                (getActiveSessions() &gt;= maxActiveSessions)) {
+            rejectedSessions++;
+            throw new TooManyActiveSessionsException(
+                    sm.getString(&quot;managerBase.createSession.ise&quot;),
+                    maxActiveSessions);
+        }
+
+        // Recycle or create a Session instance
+        Session session = createEmptySession();
+
+        // Initialize the properties of the new session and return it
+        session.setNew(true);
+        session.setValid(true);
+        session.setCreationTime(System.currentTimeMillis());
+        session.setMaxInactiveInterval(getContext().getSessionTimeout() * 60);
+        String id = sessionId;
+        if (id == null) {
+            id = generateSessionId();
+        }
+        session.setId(id);
+        sessionCounter++;
+
+        SessionTiming timing = new SessionTiming(session.getCreationTime(), 0);
+        synchronized (sessionCreationTiming) {
+            sessionCreationTiming.add(timing);
+            sessionCreationTiming.poll();
+        }
+        return (session);
+
+    }
+</code></pre>
+<p>查看其generateSessionId();下面使其生成的sessionId的源码，通过sessionIdGenerator.generateSessionId();生成sessionId，sessionIdGenerator是一个接口</p>
+<pre><code class="language-java">      /**
+     * The set of currently active Sessions for this Manager, keyed by
+     * session identifier.
+     */
+    protected Map&lt;String, Session&gt; sessions = new ConcurrentHashMap&lt;&gt;();
+  
+ 	 /**
+     * Generate and return a new session identifier.
+     * @return a new session id
+     */
+    protected String generateSessionId() {
+
+        String result = null;
+
+        do {
+            if (result != null) {
+                // Not thread-safe but if one of multiple increments is lost
+                // that is not a big deal since the fact that there was any
+                // duplicate is a much bigger issue.
+                duplicates++;
+            }
+
+            result = sessionIdGenerator.generateSessionId();
+
+        } while (sessions.containsKey(result));
+
+        return result;
+    }
+</code></pre>
+<h2 id="session过期">session过期</h2>
+<p>​	在核心源码中doGetSession中我们可以看到access()方法，其中会更新我们的session登录时间。StandardSession.Class中我们能看到  isValid()方法，用于判断此session是否过期</p>
+<pre><code class="language-java">/**
+     * Return the &lt;code&gt;isValid&lt;/code&gt; flag for this session.
+     */
+    @Override
+    public boolean isValid() {
+
+        if (!this.isValid) {
+            return false;
+        }
+
+        if (this.expiring) {
+            return true;
+        }
+
+		// accessCount,在每次access的时候都是自增,endAccess时自减
+        if (ACTIVITY_CHECK &amp;&amp; accessCount.get() &gt; 0) {
+            return true;
+        }
+
+        //这就是判断距离上次访问是否超时的过程  
+        if (maxInactiveInterval &gt; 0) {
+            // 判断上一次访问时间
+            int timeIdle = (int) (getIdleTimeInternal() / 1000L);
+            if (timeIdle &gt;= maxInactiveInterval) {
+                expire(true);
+            }
+        }
+
+        return this.isValid;
+    }
+
+    /**
+     * Return the idle time from last client access time without invalidation check
+     * @see #getIdleTime()
+     */
+    @Override
+    public long getIdleTimeInternal() {
+        long timeNow = System.currentTimeMillis();
+        long timeIdle;
+        if (LAST_ACCESS_AT_START) {
+            timeIdle = timeNow - lastAccessedTime;
+        } else {
+            timeIdle = timeNow - thisAccessedTime;
+        }
+        return timeIdle;
+    }
+</code></pre>
+<p>上面源码中可以看到超过了时间后太会调用expire方法,粘贴重要源码</p>
+<pre><code class="language-java">public void expire(boolean notify) {   
+  
+        synchronized (this) {  
+            ......  
+            //设立标志位  
+            setValid(false);  
+  
+            //计算一些统计值，例如此manager下所有session平均存活时间等  
+            long timeNow = System.currentTimeMillis();  
+            int timeAlive = (int) ((timeNow - creationTime)/1000);  
+            synchronized (manager) {  
+                if (timeAlive &gt; manager.getSessionMaxAliveTime()) {  
+                    manager.setSessionMaxAliveTime(timeAlive);  
+                }  
+                int numExpired = manager.getExpiredSessions();  
+                numExpired++;  
+                manager.setExpiredSessions(numExpired);  
+                int average = manager.getSessionAverageAliveTime();  
+                average = ((average * (numExpired-1)) + timeAlive)/numExpired;  
+                manager.setSessionAverageAliveTime(average);  
+            }  
+  
+            // 将此session从manager对象的session池中删除  
+            manager.remove(this);  
+            ......  
+        }  
+    }  
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#tomcat%E4%B8%AD%E7%9A%84session">tomcat中的session</a>
+<ul>
+<li><a href="#standardsession">StandardSession</a></li>
+</ul>
+</li>
+<li><a href="#sessionid">sessionId</a>
+<ul>
+<li><a href="#setidstring-id">setId(String id)</a></li>
+</ul>
+</li>
+<li><a href="#session%E8%BF%87%E6%9C%9F">session过期</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/springboot-pei-zhi-de-zi-dong-jia-zai/">
+              <h3 class="post-title">
+                 springBoot 配置的自动加载
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

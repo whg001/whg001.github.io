@@ -1,0 +1,292 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>effective Java第三章笔记 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1639306399400">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="effective Java第三章笔记 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="对于所有对象都有的通用方法
+此文章是作者看完《effective Java》第三章后的笔记与总结，第三章强烈推荐去看书籍，因为里面的代码更能让你理解透彻。
+此章最有感触的是equals的传递性，以前没有考虑过父子关系的传递，也没有将里氏替换..." />
+    <meta name="keywords" content="原创,java" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1639306399400" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              effective Java第三章笔记
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-12-12
+              </span>
+              <span>
+                7 min read
+              </span>
+              
+                <a href="https://whg001.github.io/tag/qCSWQaDUs/" class="post-tag">
+                  # 原创
+                </a>
+              
+                <a href="https://whg001.github.io/tag/PNv5KdDzK/" class="post-tag">
+                  # java
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h2 id="对于所有对象都有的通用方法">对于所有对象都有的通用方法</h2>
+<p>此文章是作者看完《effective Java》第三章后的笔记与总结，第三章强烈推荐去看书籍，因为里面的代码更能让你理解透彻。<br>
+此章最有感触的是equals的传递性，以前没有考虑过父子关系的传递，也没有将里氏替换原则带入进行思考，文本中给出使用组合代替继承的方案，也让我感受到了组合的优点</p>
+<h3 id="第8条覆盖equals需要遵循的约定">第8条：覆盖equals需要遵循的约定</h3>
+<p>​	对于equals方法我相信作为一个Java开发，大家都熟记于心，<strong>自反性，对称性，传递性，一致性</strong>，自反性：对于非null的引用值a，a.equals(a) = true。对称性：a.equals(b)于b.equals(a)，结果一样。传递性：a.equals(b) = true,b.equals(c)=true，则a.equals(c)也要为true。一致性：对于非null的引用a，b，如果equals比较的内容值没有改变，则a.equals(b)的值多次比较应该保持一致。则是大家都知道接下来再说一说书本里面的建议。</p>
+<p><strong>超类已经覆盖了equals，从超类继承过来的的行为对于其子类也是适合的</strong></p>
+<p>这个建议很重要，在设计模式的5大原理S.O.L.I.D 中，的L  里氏替换原则这个的建议类似，即<strong>进行继承关系抽象时，凡是可以用父类或者基类的地方，都可以用子类替换</strong>。</p>
+<p>在此借用书中的例子来说明这个的实际用处。</p>
+<p>有一个类 point，其中有属性x,y。其equals方法就是比较着2个属性是否相等来进行判断。</p>
+<p>有一天新增了一个工具类，用来判断point这个点是否存在于一个单位圆中，这个圆的具体实现如下</p>
+<pre><code class="language-java">private static final Set&lt;Point&gt; unitCircle;
+
+static{
+	unitCircle = new HashSet&lt;Point&gt;();
+    unitCircle.add(new Point(0,1));
+    unitCircle.add(new Point(1,0));
+    unitCircle.add(new Point(0,-1));
+    unitCircle.add(new Point(-1,0));
+}
+public static boolean onunitCircle(Point point){
+    return unitCircle.contians(p);
+}
+</code></pre>
+<p>判断一个Point是否在这个单位圆中调用这个方法即可。</p>
+<p>此时有一个类继承了Point，ColorPoint他多了一个color用来表示颜色。首先你要想的是他的传递性(其余性质基本容易满足)，看看一下代码是否满足</p>
+<pre><code class="language-java">public boolean equals(Object object){
+	if(!(object instance colorPoint)）{
+        return false;
+    }
+    return super.equals(object) &amp;&amp; ((colorPoint)object).color == this.color;
+}
+</code></pre>
+<p>这是一个很容易踩的坑，很遗憾没有满足对称性，ColorPoint 的对象equals point 返回false。point equals ColorPoint  返回ture。这显然对称性就不会满足。</p>
+<p>书中提出可以使用getClass代替instance，这样可以避免这种情况。getClass 2个类一致时踩返回ture，instance当他是他的父类也会返回ture。书中也说，虽然能够实现对称性，即ColorPoint 的对象equals point 返回false，point equals ColorPoint  也返回false。但是这样会导致他会损失一些父类的工具类。比如 前面提到的unitCircle方法。</p>
+<p>相对较好的解决方案，拓展类的时候使用 <strong>组合来代替继承</strong>将ColorPoint改为如下</p>
+<pre><code class="language-java">public class ColorPoint{
+	private Point point;
+    ptivate String color;
+    
+    public boolean equals(Object object){
+        if(!(o instance ColorPoint)){
+            return false;
+        }
+        ColorPoint cp = (ColorPoint)object;
+        return cp.point.equals(this.point) &amp;&amp; cp.color == this.color;
+    }
+}
+</code></pre>
+<p>这样的话传递性，自反性....都已满足，且在使用point的工具类时可以直接将ColorPoint.point传入进行比较！</p>
+<h3 id="第9条覆盖equals方法时总要覆盖hashcode">第9条：覆盖equals方法时总要覆盖Hashcode</h3>
+<p>如果你覆盖了equals但没有覆盖hashcode，会导致很多散列表无法正常工作。下面是Object的规范</p>
+<p>1.对象的equals方法中比较的属性的值没有改变时，其返回的hashcode也不能改变。</p>
+<p>2.如果equals为ture，则其hashCode必须相等</p>
+<p>3.hashcode相等，equals不一定相同，因为hash存在hash碰撞</p>
+<p>一下是书中提到编写hashcode的方法</p>
+<ol>
+<li>把某个非零常数值，比如说17，保存在一个叫result的int类型的变量中。</li>
+<li>对于对象中每一个关键域f（指equals方法中考虑的每一个域），完成以下步骤：<br>
+a. 为该域计算int类型的散列码c：<br>
+i. 如果该域是boolean类型，则计算(f ? 0 : 1)   。<br>
+ii. 如果该域是byte、char、short或者int类型，则计算(int)   f。<br>
+iii. 如果该域是long类型，则计算(int)   (f^(f&gt;&gt;&gt;32))。<br>
+iv. 如果该域是float类型，则计算Float.floatToIntBits(f)。<br>
+v.   如果该域是double类型，则计算Double.doubleToLongBits(f)得到一个long类型的值，然后  按照步骤2.a        .iii，对该long型值计算散列值。<br>
+vi.如果该域是一个对象引用，并且该类的equals方法通过递归调用equals的方式来比较这个域，则同样对这个域递归调用hashCode。如果要求一个更为复杂的比较，则为这个域计算一个“规范表示（canonical representation）”，然后针对这个范式表示调用hashCode。如果这个域的值为null,则返回0（或者其他某个常数，但习惯上使用0）。<br>
+vii.   如果该域是一个数组，则把每一个元素当做单独的域来处理。也就是说，递归地应用上述规则，对每个重要的元素计算一个散列码，然后根据步骤2.b中的做法把这些散列值组合起来。<br>
+b.按照下面的公式，把步骤a中计算得到的散列码c组合到result中：result   =result*37+c</li>
+<li>返回result。</li>
+</ol>
+<h3 id="第10条始终覆盖tostring">第10条：始终覆盖toString</h3>
+<p>相信大家都会这么干，不然你print的时候看到一个hash，会有点懵逼。给一个建议，当类的属性很多时，toString只显示关键，有区分度的信息，通常于equals相关。</p>
+<h3 id="第11条谨慎的覆盖clone">第11条：谨慎的覆盖clone</h3>
+<p>这点的话就是注意深拷贝与浅拷贝</p>
+<h3 id="第12条考虑实现comparable接口">第12条：考虑实现Comparable接口</h3>
+<p>comparable接口与排序相关，在很多容器中都是使用这个进行比较和排序。对于此方法的返回值是一个sgn(表达式)，他只中国正负零来进行判断。</p>
+<p>书中有一个很重要的提议其原理与equals覆盖的类，要拓展组件时一样即：如果你想为一个实现了Comparable接口的类增加值组件，请不要拓展这个类，而是编写一个不相关的类，其中包含第一个类的一个实例，随后提供一个方法返回这个实例。这样的话可以自由的第二个类上实现comparable方法。同时允许在某些时候使用第一个的实例进行比较。<br>
+当比较的为数字且没有负数的时候,溢出可能性不大时可以直接return a-b;</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E5%AF%B9%E4%BA%8E%E6%89%80%E6%9C%89%E5%AF%B9%E8%B1%A1%E9%83%BD%E6%9C%89%E7%9A%84%E9%80%9A%E7%94%A8%E6%96%B9%E6%B3%95">对于所有对象都有的通用方法</a>
+<ul>
+<li><a href="#%E7%AC%AC8%E6%9D%A1%E8%A6%86%E7%9B%96equals%E9%9C%80%E8%A6%81%E9%81%B5%E5%BE%AA%E7%9A%84%E7%BA%A6%E5%AE%9A">第8条：覆盖equals需要遵循的约定</a></li>
+<li><a href="#%E7%AC%AC9%E6%9D%A1%E8%A6%86%E7%9B%96equals%E6%96%B9%E6%B3%95%E6%97%B6%E6%80%BB%E8%A6%81%E8%A6%86%E7%9B%96hashcode">第9条：覆盖equals方法时总要覆盖Hashcode</a></li>
+<li><a href="#%E7%AC%AC10%E6%9D%A1%E5%A7%8B%E7%BB%88%E8%A6%86%E7%9B%96tostring">第10条：始终覆盖toString</a></li>
+<li><a href="#%E7%AC%AC11%E6%9D%A1%E8%B0%A8%E6%85%8E%E7%9A%84%E8%A6%86%E7%9B%96clone">第11条：谨慎的覆盖clone</a></li>
+<li><a href="#%E7%AC%AC12%E6%9D%A1%E8%80%83%E8%99%91%E5%AE%9E%E7%8E%B0comparable%E6%8E%A5%E5%8F%A3">第12条：考虑实现Comparable接口</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/session/">
+              <h3 class="post-title">
+                session
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
