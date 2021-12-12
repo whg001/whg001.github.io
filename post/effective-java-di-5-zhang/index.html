@@ -1,0 +1,265 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>effective Java第5章-泛型 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1639306896551">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="effective Java第5章-泛型 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="本文章是自己看完effective Java第5章后的一点笔记，看完后觉得自己以前基本就是一个不晓得泛型是啥的人。
+有了泛型，可以告诉编译器的每个集合中接受哪些对象类型，编译器会自动在插入时进行转换，并在编译时告诉你是否插入了错误的对象。
+..." />
+    <meta name="keywords" content="java" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1639306896551" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              effective Java第5章-泛型
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-12-12
+              </span>
+              <span>
+                4 min read
+              </span>
+              
+                <a href="https://whg001.github.io/tag/PNv5KdDzK/" class="post-tag">
+                  # java
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://whg001.github.io/post-images/effective-java-di-5-zhang.png" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <p>本文章是自己看完effective Java第5章后的一点笔记，看完后觉得自己以前基本就是一个不晓得泛型是啥的人。</p>
+<p>有了泛型，可以告诉编译器的每个集合中接受哪些对象类型，编译器会自动在插入时进行转换，并在编译时告诉你是否插入了错误的对象。</p>
+<h2 id="不要在新代码中使用原生态的类型">不要在新代码中使用原生态的类型</h2>
+<p>​	意思为不在代码中写</p>
+<pre><code class="language-java">List list = new ArrayList()
+</code></pre>
+<p>上面的代码为原生态类型，在1.5版本前这样写是可以加入不同类型的对象，但是在取出时，强转往往会出错。错误嘛，越早发现越好，最好编译期间就发现，不然就是一颗雷。那为什么有了泛型后，在创建容器对象时制定类型就行了呢？泛型到底干了什么呢？</p>
+<p><strong>泛型编译时强化他们的类型信息，并在运行时擦除</strong>，在编译时会检查其元素类型信息，但在运行时丢弃其元素类型信息。</p>
+<p>于是编译期间就能够发现是否插入了不符合类型要求的对象(其子类，会自动转为父类，编译器会帮你进行装换)，还有一点很重要，** List&lt; String &gt;是List的子类型，但不是List&lt; Object &gt;的子类型**。</p>
+<p>泛型中的&quot;?&quot;,为<strong>无限制的类型通配符</strong>，读做每个类型的集合。表示任意类型的集合都可以，但不能将任何元素(除了null)加入Collecion&lt;?&gt;。</p>
+<pre><code class="language-java">    static int test(Set&lt;?&gt; s1, Set&lt;?&gt; s2){
+        int result = 0;
+        for(Object o : s1){
+            if( s2.contains(o) ){
+                result++;
+            }
+        }
+        return result;
+    }
+
+public static void main(String[] args) {
+        Set&lt;String&gt; s1 = new LinkedHashSet&lt;&gt;();
+        Set&lt;Object&gt; o1 = new LinkedHashSet&lt;&gt;();
+        test(s1,o1);
+}
+</code></pre>
+<h2 id="消除非受检警告">消除非受检警告</h2>
+<p>​	意思就是尽可能的减少警告，如果遇到了不可能发生错误的警告代码可以使用@SuppressWarning(&quot;unchecked&quot;)注解来禁止这条警告。但是始终应该在最小范围内使用@SuppressWarning(&quot;unchecked&quot;)注解。</p>
+<h2 id="列表优先于数组">列表优先于数组</h2>
+<p>​	列表与数组的区别</p>
+<ol>
+<li>
+<p>数组是协变得，即如果sub是super的子类型，则sub[]是super[]的子类型，而列表是不可变的list<sub>与 list<super>没有什么关联。</p>
+<pre><code class="language-java">Object[] objects = new Long[1];
+objects[0] = &quot;asdf,zxc&quot;;
+以上在运行时才会报错
+List&lt;Object&gt; objets2 = new ArrayList&lt;Long&gt;;
+objects2.add(&quot;asdf&quot;);
+以上代码编译期间会报错
+</code></pre>
+</li>
+<li>
+<p>数组是具体化的，因此数组会在运行时才知道并检查他的类型，而泛型是擦除的来实现的。因此泛型只在编译时强化他们的类型信息，并在运行时丢弃(或擦除)他们的元素类型信息。擦除是使泛型可以与没有使用泛型的代码随意进行使用。</p>
+</li>
+</ol>
+<p>因为前面的2个原因所以数组与泛型不能共用  new List<E>[],E[],new List<String>[]，都会编译期出错。</p>
+<p>书中的建议是：当你发现自己将数组与列表混合使用，并得到了编译时的警告或者错误时，应该用列表代替数组</p>
+<h2 id="优先考虑泛型与泛型方法">优先考虑泛型与泛型方法</h2>
+<p>​	泛型与泛型方法都更加便于在编译期间发现问题，且使用性更加强大</p>
+<h2 id="利用有限制通配符来提升api的灵活性">利用有限制通配符来提升API的灵活性</h2>
+<p>​	什么是有限制通配符呢？</p>
+<pre><code class="language-java">Collection&lt;? extends E&gt;();
+Collection&lt;? super E&gt;();
+</code></pre>
+<p>因为泛型不是协变得，于是很多时候将其子类的集合传入会报错，此时就可以使用有限制通配符来解决这个问题。</p>
+<p>书中还提出了一个很好的观点<strong>PECS表示producer-extends，consumer-super</strong>，意思就是对于消费集合中的元素的也就是使用集合中的元素的使用super，往集合中添加元素的，extends更加好。详细解释更建议看书</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E4%B8%8D%E8%A6%81%E5%9C%A8%E6%96%B0%E4%BB%A3%E7%A0%81%E4%B8%AD%E4%BD%BF%E7%94%A8%E5%8E%9F%E7%94%9F%E6%80%81%E7%9A%84%E7%B1%BB%E5%9E%8B">不要在新代码中使用原生态的类型</a></li>
+<li><a href="#%E6%B6%88%E9%99%A4%E9%9D%9E%E5%8F%97%E6%A3%80%E8%AD%A6%E5%91%8A">消除非受检警告</a></li>
+<li><a href="#%E5%88%97%E8%A1%A8%E4%BC%98%E5%85%88%E4%BA%8E%E6%95%B0%E7%BB%84">列表优先于数组</a></li>
+<li><a href="#%E4%BC%98%E5%85%88%E8%80%83%E8%99%91%E6%B3%9B%E5%9E%8B%E4%B8%8E%E6%B3%9B%E5%9E%8B%E6%96%B9%E6%B3%95">优先考虑泛型与泛型方法</a></li>
+<li><a href="#%E5%88%A9%E7%94%A8%E6%9C%89%E9%99%90%E5%88%B6%E9%80%9A%E9%85%8D%E7%AC%A6%E6%9D%A5%E6%8F%90%E5%8D%87api%E7%9A%84%E7%81%B5%E6%B4%BB%E6%80%A7">利用有限制通配符来提升API的灵活性</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/tcp-yu-udp-xiang-jie/">
+              <h3 class="post-title">
+                TCP与UDP 详解
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
