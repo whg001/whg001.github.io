@@ -1,0 +1,322 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TCP与UDP 详解 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1639306582512">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="TCP与UDP 详解 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="最近博主重新看了一遍tcp与udp，本文的内容出自《计算机网络》与趣谈网络协议。用于以后复习也供各位参考。本文会以问题的形式开讲，对问题进行讲解，希望大家能带着问题和博主一起温习。
+tcp与udp的区别
+面试常问的一个问题 tcp与udp的..." />
+    <meta name="keywords" content="计算机网络" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1639306582512" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              TCP与UDP 详解
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-12-12
+              </span>
+              <span>
+                13 min read
+              </span>
+              
+                <a href="https://whg001.github.io/tag/tn4Qmi_gv/" class="post-tag">
+                  # 计算机网络
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://whg001.github.io/post-images/tcp-yu-udp-xiang-jie.png" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <p>最近博主重新看了一遍tcp与udp，本文的内容出自《计算机网络》与趣谈网络协议。用于以后复习也供各位参考。本文会以问题的形式开讲，对问题进行讲解，希望大家能带着问题和博主一起温习。</p>
+<h2 id="tcp与udp的区别">tcp与udp的区别</h2>
+<pre><code>面试常问的一个问题 tcp与udp的区别(不妨自己先答这个问题)？
+你可能会说：tcp面向连接，udp无连接。tcp可靠，udp只管尽最大可能交付。tcp面向字节流，udp面向报文。tcp全双工通信，udp支持一对多,一对一，多对一，多对多的交互通信。
+
+面试官：既然你说到了一个面向字节一个面向数据报，继续说说里面的区别。
+UDP面向报文，应用层不管是发多长的报文，udp照常发送。不管多大，你敢给我就敢接，而且原封不动给你发出去。但要注意在这里的发出去是指交给ip层。数据给ip层，IP层可能会分割(个人感觉这就是分层的好处之一相互之间的耦合较低，不管你是tcp还是udp，爷ip层照样来)，若数据报文太大，ip层在传送时，会进行切割，这回降低ip层的效率。相反如果太小，ip层首部相对较大，这样传输效率也不会好到哪去。
+TCP面向字节流，应用层将数据发给tcp后。tcp会将数据看成一连串无结构的字节流(“流”是指从进程流入，或者流出的序列号)，这一串无结构的字节流，一次发送多少出去(当然这里的发出去也可能会有ip层再次切割)，由tcp决定，即发送多少数据tcp可控(因为可控所以才能拥塞控制)。与udp对比 udp会一次全部交出去。
+
+面试官：那继续说说什么是面向连接，什么是无连接。
+UDP无连接，即在发送数据前不需要建立连接，因此减少了开销与发送数据之前的的时延。
+TCP面向连接，在发送数据之前，要双方谈讨并记录好发送数据所需的东西 ，与数据结构。
+
+面试官：好，你回家等通知吧。
+你可能会想，好熟悉的语句。害，又是回家等通知。其实是博主不会这样一问一答的讲解了。
+</code></pre>
+<p>后面内容主要围绕TCP。希望你能边看下面的内容边进行思考，tcp为什么要这样设计，这样的设计解决了什么问题。</p>
+<h2 id="tcp详解">TCP详解</h2>
+<h3 id="可靠传输的原因">可靠传输的原因</h3>
+<p>总所周知，ip层并不可靠，他干起活来也总是说 我尽我最大能力了，即使出了问题你也别怪我了哈。上层tcp一看，说小老弟这可不行，一次干不好就干多次，以后我来指挥你，保证你的可靠性。</p>
+<pre><code>tcp干了什么能合理将数据交给ip层使其传输可靠？如果是你指挥下层干活，你会怎么干？
+如果你是老大，我相信你会对交代给下面的人做的事做一个记录。在规定时间内未做完，则去提醒一下，让他赶紧去干。做完了汇报给你，你做好记录，于是再给他分配下一个任务。这样的话如果ip层尽了最大努力，而你又实时把控进度，与完成情况。这样还不可靠吗？
+</code></pre>
+<p>tcp用了以下几个点进行保障可靠性</p>
+<ol>
+<li>
+<p>停止等待协议</p>
+<p>停止等待就是每发送完一个分组就停止发送，等到对方确认。对方确认后再发送一个分组。</p>
+</li>
+</ol>
+<blockquote>
+<p>如果在传输过程中出现差错怎么办？如果在传输过程中有一个M，迟迟没有收到响应的信号，超过一定时间他就会超时重传，即重新发送一次。</p>
+</blockquote>
+<blockquote>
+<p>怎样进行超时重传？首先有一个超时记录器，如果在超时记录器过期前收到了应答信号则撤销，否则重新发送信号。</p>
+</blockquote>
+<blockquote>
+<p>再问二个问题，1：超时时间怎么定？2：对于一个发送失败的字节流，在哪能找到他，或者你应该怎样对应用层交付的信息进行保存？</p>
+</blockquote>
+<blockquote>
+<p>1.超时时间，要大于数据的平均往返时间。2.tcp会将应用层的数据放入其缓存区，并对其进行编号。对于收到了应答信号的才将其从缓冲区删除。</p>
+</blockquote>
+<ol start="2">
+<li>
+<p>连续ARQ协议</p>
+<p>核心是一个滑动窗口，说道滑动窗口相信各位it的都不陌生，因为其在算法题中经常是一个解决问题的好结构。即窗口可以一直向前滑动，不能后退</p>
+</li>
+</ol>
+<figure data-type="image" tabindex="1"><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/6/8/17291c361f0a8118~tplv-t2oaga2asx-image.image" alt="" loading="lazy"></figure>
+<center>图1.1</center>
+<p>如1.1所示黑色加粗部分为滑动窗口，可一直向前滑动。连续ARQ规定发送方每收到一个确定则向前滑动一个分组的位置。接收方一般采用累计确认的方式。即接收方不会对每一个收到的都发送一个ack(应答)，在收到几个分组后，对<strong>按序到达的最后一个分组</strong>确认(例如发送了  1,2,3,4,5 接收方收到了 1,2,4,5  则接收方只能对1,2发出接受信号)</p>
+<h3 id="tcp报文段的首部格式">TCP报文段的首部格式</h3>
+<pre><code>你可能会因为首部格式里面的东西有点多而不想看，但是如果不看，你会错过很多关键性的东西(因为我自己以前学这门课时没看，后来回过头来看才体会到所有的设计都是因为需要！)，我会尽可能精简
+</code></pre>
+<p><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/6/8/17291d0a441ab54e~tplv-t2oaga2asx-image.image" alt="" loading="lazy"><br>
+（1） <strong>源端口目的端口</strong> 各占16位，2字节，于是端口号最多到2的16次方-1</p>
+<p>（2） <strong>序号</strong> 占4字节，在tcp连接中传输的字节流每个都按顺序编号，传送的字节流的其实序号在建立连接时会指定，即seq=u</p>
+<p>（3）<strong>确认序号</strong> 占4字节<strong>是期望收到的下一个报文段的第一个数据字节的序号</strong>。若确认号 = N，则表明 前N-1个的所有数据已经收到，</p>
+<p>（4）<strong>URG</strong> 当URG=1 时，表明紧急指针有效。应尽快传送，而不要按照原来的排队顺序进行发送。</p>
+<p>（5）<strong>ACK</strong> 当ack=1时确认序列号才有效</p>
+<p>（6）<strong>推送PUSH</strong> 当希望对方立即响应是push=1，tcp就会立马将数据推送过去，不需要等到缓冲区填满后在向上交付。</p>
+<p>（7）<strong>同步SYN</strong> 在建立连接时表示同步序号，syn=1，ack=0 这是一个请求连接的报文。syn=1，ack=1 一个连接接受的报文</p>
+<p>（8）<strong>终止FIN</strong> 用来释放连接fin=1表示此报文段的发送方已经将数据发送完了，请求释放连接。</p>
+<p>（9）<strong>窗口</strong> 占2字节，这代表的是发送此报文的接收窗口。窗口值告诉对方，接收方目前允许对方发送的数据量。因为缓存有大小，如果超过了缓存则不能接收。窗口值是用来控制发送数据大小的依据。</p>
+<p>（10）<strong>选项</strong>  长度可变，最大40字节。里面可以放时间戳，用来计算往返时间吗，放SACK(select ack，选择确认)，sack的作用是，有时因为网络波动发送方 发送了 1,2,3,4,5,6 接收方收到了 1,2,4,5,6。此时可以使用sack,确认号为3，外加L1=4,R1=6,用来告诉发送方少了3，让其重新发送(有一点要注意的是每个序列号占4个字节，一个边界会用掉4字节，一块区域有2个边界，会占用8个字节。选项最大40字节。于是最多说明4块区域)<br>
+<img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/6/8/172920427ceaaf77~tplv-t2oaga2asx-image.image" alt="" loading="lazy"></p>
+<h3 id="tcp拥塞控制">tcp拥塞控制</h3>
+<p>tcp拥塞控制的算法有，慢开始，拥塞避免，快重传，快恢复</p>
+<h4 id="慢开始拥塞避免快恢复">慢开始，拥塞避免，快恢复</h4>
+<p>拥塞控制，通过窗口来进行拥塞控制，发送方维持一个<strong>拥塞窗口cwnd</strong>的状态变量。窗口大小由网络的拥塞决定。<br>
+慢开始算法的思路是：一开始由于不知道网络拥塞情况怎样，为了不给网络添堵，我先发一个试一试 ，若能接收到我在继续加大。即发送窗口由小到大。</p>
+<p>一条 TCP 连接开始，cwnd 设置为一个报文段，一次只能发送一个；当收到这一个确认的时候，cwnd 加一，于是一次能够发送两个；当这两个的确认到来的时候，每个确认 cwnd 加一，两个确认 cwnd 加二，于是一次能够发送四个；当这四个的确认到来的时候，每个确认 cwnd 加一，四个确认 cwnd 加四，于是一次能够发送八个。可以看出这是指数性的增长。</p>
+<p>涨到什么时候是个头呢？</p>
+<p>有一个值 ssthresh 为 65535<br>
+个字节，当超过这个值的时候，就要小心一点了，不能倒这么快了，可能快满了，再慢下来。每收到一个确认后，cwnd 增加 1/cwnd，我们接着上面的过程来，一次发送八个，当八个确认到来的时候，每个确认增加 1/8，八个确认一共 cwnd 增加 1，于是一次能够发送九个，变成了线性增长。但是线性增长还是增长，还是越多。</p>
+<p>当网络出现拥挤，有包丢失后快速重传算法开始。当接收端发现丢了一个中间包的时候，发送三次前一个包的 ACK，于是发送端就会快速地重传，不必等待超时再重传。TCP 认为这种情况不严重，因为大部分没丢，只丢了一小部分，cwnd 减半为 cwnd/2，然后 sshthresh = cwnd，当三个包返回的时候，cwnd = sshthresh + 3，也就是没有一夜回到解放前，而是还在比较高的值，呈线性增长。(如果没有快速重传则又会从1开始)<br>
+<img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/6/8/17292d34f10eac31~tplv-t2oaga2asx-image.image" alt="" loading="lazy"></p>
+<p>tcp的拥塞控制的方法之一就是根据网络情况动态调整拥塞窗口及其发送速度。</p>
+<p>实际上发送的窗口的大小不仅由网络的拥塞情况来决定，还有一个很重要的因子接收方窗口(rwnd,因为缓存大小有限，应用层若没有即使处理缓存中的数据，缓存区满了你就算发了我也收不了) 发送窗口的上限值=Min[rwnd,cwnd]。</p>
+<h4 id="快重传">快重传</h4>
+<p>快重传的算法规定，发送方只要一连收到<strong>三个重复确认</strong>，就知道接受方确实没有接受到这个数据，就会立即对哪一个缺失了进行重传。例如 ：发送方 发送：1,2,3,4,5，接收方收到了 1,2,4,5，则接收方会发送应答信号：3,3,3。发送方收到后会立马重新发送3。</p>
+<p>看到这 应该可以思考思考为什么你下载东西的时候有时8M，有时7M。甚至更低，可能有哪些原因呢？</p>
+<h3 id="tcp三次握手与四次挥手">TCP三次握手与四次挥手</h3>
+<h4 id="三次握手">三次握手</h4>
+<p><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/6/8/17292f0b47bc7b8c~tplv-t2oaga2asx-image.image" alt="" loading="lazy"><br>
+大家先看图，相信大家对这个都不陌生。(1)客户端发起连接首部的SYN设为1，将初始化序列号为X，以后客户端发送的序列号会大于X,。(2)服务器收到后进行应答 首部SYN=1,ACK=1，seq=y，ack=x+1<br>
+，因为tcp为双工通信，服务器也会发送信息给客户端，于是也需要初始化序列号。(3)随后客户端在进行一次回应ACK=1,ACK=Y+1,seq=y+1。可以进行正式的数据传送了。客户端与服务器相应的状态改变 我希望读者也能记一记。</p>
+<p><strong>很多人都会问三次握手为什么会三次</strong>？个人觉得，(1) 2次握手客户端知到服务器能接收到信息，而服务器并不知道客户端是否能收到他的通知。(2) 如果客户端发送的第一次的握手信息因为网络波动或者其他原因，长时间没有到达服务器，进行了一次重传。重传通信建立并结束后。之前丢失的信息又回来，于是服务器以为其又要通信于是服务器又保存了一个数据结构用于以后通信，这样岂不是很浪费资源.有人可能会问为什么不4次，5次。个人觉得三次将需要的规定的数据已经规定好了。四次目前觉得没什么需要。</p>
+<h4 id="四次挥手">四次挥手</h4>
+<figure data-type="image" tabindex="2"><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/6/8/17293004c821477a~tplv-t2oaga2asx-image.image" alt="" loading="lazy"></figure>
+<ol>
+<li>客户端数据发送完了，发送一个关闭报文FIN=1,seq=u.seq=u，u他等于前面已经传送过得数据+1。这个报文表示我发送完了，想要关闭连接</li>
+<li>服务器收到消息，发送应答ACK=1,ack=u+1,seq=v.表示我已经收到你想关闭的消息的，但我的数据又可能还没发送完。</li>
+<li>服务器数据发送完了同样 FIN=1,ACK=1,seq=w，ack=u+1.表示我的数据也发送完了序号为w，同理W他等于前面已经传送过得数据+1</li>
+<li>客户端发送应答数据ACK=1,seq=u+1,ack=w+1<br>
+上图你可能会好奇为什么有个TIME-WAIT时间。这个时间是为了防止服务器没有收到最后一次应答而进行超时重传，重新发送一次关闭信号，若此时客户端已经关闭则，服务器会长时间停在LAST-ACK状态。若客户端在TIME-WAIT期间重新收到了服务器的关闭信息则会哦重新应答一次，并继续重新计时等待2MSL(MSL Maximum Segment Lifetime 最长报文段寿命)</li>
+</ol>
+<p>外加一张总的<strong>状态转换表</strong>，请仔细看看捋一捋其状态转变的流程，这张图消化了tcp的流程你就清楚了</p>
+<figure data-type="image" tabindex="3"><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/6/8/172932c223f1deda~tplv-t2oaga2asx-image.image" alt="" loading="lazy"></figure>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#tcp%E4%B8%8Eudp%E7%9A%84%E5%8C%BA%E5%88%AB">tcp与udp的区别</a></li>
+<li><a href="#tcp%E8%AF%A6%E8%A7%A3">TCP详解</a>
+<ul>
+<li><a href="#%E5%8F%AF%E9%9D%A0%E4%BC%A0%E8%BE%93%E7%9A%84%E5%8E%9F%E5%9B%A0">可靠传输的原因</a></li>
+<li><a href="#tcp%E6%8A%A5%E6%96%87%E6%AE%B5%E7%9A%84%E9%A6%96%E9%83%A8%E6%A0%BC%E5%BC%8F">TCP报文段的首部格式</a></li>
+<li><a href="#tcp%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6">tcp拥塞控制</a>
+<ul>
+<li><a href="#%E6%85%A2%E5%BC%80%E5%A7%8B%E6%8B%A5%E5%A1%9E%E9%81%BF%E5%85%8D%E5%BF%AB%E6%81%A2%E5%A4%8D">慢开始，拥塞避免，快恢复</a></li>
+<li><a href="#%E5%BF%AB%E9%87%8D%E4%BC%A0">快重传</a></li>
+</ul>
+</li>
+<li><a href="#tcp%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B%E4%B8%8E%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B">TCP三次握手与四次挥手</a>
+<ul>
+<li><a href="#%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B">三次握手</a></li>
+<li><a href="#%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B">四次挥手</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/lesslesseffective-javagreatergreater-di-er-zhang-chuang-jian-he-xiao-hui-dui-xiang/">
+              <h3 class="post-title">
+                 《effective java》第二章 创建和销毁对象
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

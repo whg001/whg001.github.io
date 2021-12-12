@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://whg001.github.io</id>
     <title>haogui</title>
-    <updated>2021-12-12T10:53:23.061Z</updated>
+    <updated>2021-12-12T10:56:26.388Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://whg001.github.io"/>
     <link rel="self" href="https://whg001.github.io/atom.xml"/>
@@ -11,11 +11,18 @@
     <icon>https://whg001.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, haogui</rights>
     <entry>
-        <title type="html"><![CDATA[effective Java第三章笔记]]></title>
-        <id>https://whg001.github.io/post/effective-java-di-san-zhang-bi-ji/</id>
-        <link href="https://whg001.github.io/post/effective-java-di-san-zhang-bi-ji/">
+        <title type="html"><![CDATA[TCP与UDP 详解]]></title>
+        <id>https://whg001.github.io/post/tcp-yu-udp-xiang-jie/</id>
+        <link href="https://whg001.github.io/post/tcp-yu-udp-xiang-jie/">
         </link>
-        <updated>2021-12-12T10:52:53.000Z</updated>
+        <updated>2021-12-12T10:55:05.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[ 《effective java》第二章 创建和销毁对象]]></title>
+        <id>https://whg001.github.io/post/lesslesseffective-javagreatergreater-di-er-zhang-chuang-jian-he-xiao-hui-dui-xiang/</id>
+        <link href="https://whg001.github.io/post/lesslesseffective-javagreatergreater-di-er-zhang-chuang-jian-he-xiao-hui-dui-xiang/">
+        </link>
+        <updated>2021-12-12T10:54:13.000Z</updated>
     </entry>
     <entry>
         <title type="html"><![CDATA[session]]></title>
@@ -72,12 +79,5 @@
         <link href="https://whg001.github.io/post/go-yue-du-ji-chu-shu-ju-lei-xing-fu-he-shu-ju-lei-xing-han-shu-fang-fa-zhe-si-zhang-de-xue-xi-bi-ji/">
         </link>
         <updated>2021-10-31T14:17:30.000Z</updated>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[zero-copy and mmap]]></title>
-        <id>https://whg001.github.io/post/zero-copy-and-mmap/</id>
-        <link href="https://whg001.github.io/post/zero-copy-and-mmap/">
-        </link>
-        <updated>2021-10-24T13:38:23.000Z</updated>
     </entry>
 </feed>
