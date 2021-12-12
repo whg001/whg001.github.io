@@ -1,0 +1,317 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>go语言学习笔记五-工具测试 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1639305066950">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="go语言学习笔记五-工具测试 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="包和工具
+任何包系统设计的目的都是为了简化大型程序的设计和维护工作。
+特性
+第一点，所有导入的包必须在每个文件的开头显式声明，这样的话编译器就没有必要读取和分析整个源文件来判断包的依赖关系。
+第二点，禁止包的环状依赖，因为没有循环依赖，包的..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1639305066950" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              go语言学习笔记五-工具测试
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-12-12
+              </span>
+              <span>
+                8 min read
+              </span>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://whg001.github.io/post-images/go-yu-yan-xue-xi-bi-ji-wu-gong-ju-ce-shi.jpeg" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h2 id="包和工具">包和工具</h2>
+<p>任何包系统设计的目的都是为了简化大型程序的设计和维护工作。</p>
+<h3 id="特性">特性</h3>
+<p>第一点，所有导入的包必须在每个文件的开头显式声明，这样的话编译器就没有必要读取和分析整个源文件来判断包的依赖关系。</p>
+<p>第二点，禁止包的环状依赖，因为没有循环依赖，包的依赖关系形成一个有向无环图，每个包可以被独立编译，而且很可能是被并发编译。 （对于环形以来要特别注意）</p>
+<p>第三点，编译后包的目标文件不仅仅记录包本身的导出信息，目标文件同时还记录了包的依赖关系。</p>
+<h3 id="导入路径">导入路径</h3>
+<p>每个包是由一个全局唯一的字符串所标识的导入路径定位。出现在import语句中的导入路径也是字符串。</p>
+<h3 id="包声明">包声明</h3>
+<p>在每个Go语言源文件的开头都必须有包声明语句。包声明语句的主要目的是确定当前包被其它包导入时默认的标识符（也称为包名）。</p>
+<h3 id="包的匿名导入">包的匿名导入</h3>
+<p>如果只是导入一个包而并不使用导入的包将会导致一个编译错误。但是有时候我们只是想利用导入包而产生的副作用：它会计算包级变量的初始化表达式和执行导入包的init初始化函数。</p>
+<p>我们可以用下划线<code>_</code>来重命名导入的包。像往常一样，下划线<code>_</code>为空白标识符，并不能被访问。</p>
+<pre><code class="language-Go">import _ &quot;image/png&quot; // register PNG decoder
+</code></pre>
+<h4 id="示例">示例</h4>
+<pre><code class="language-Go">import (
+    &quot;database/sql&quot;
+    _ &quot;github.com/lib/pq&quot;              // enable support for Postgres
+    _ &quot;github.com/go-sql-driver/mysql&quot; // enable support for MySQL
+)
+
+db, err = sql.Open(&quot;postgres&quot;, dbname) // OK
+db, err = sql.Open(&quot;mysql&quot;, dbname)    // OK
+db, err = sql.Open(&quot;sqlite3&quot;, dbname)  // returns error: unknown driver &quot;sqlite3&quot;
+</code></pre>
+<blockquote>
+<p>这点在我看来是一种很好的组装框架，能够不改变具体代码而有不同的实现，其称为服务提供者框架，在jdbc中各个语言都有运用</p>
+</blockquote>
+<p><strong>服务提供者框架</strong>，因为其三大要素。</p>
+<ol>
+<li>服务接口(这是提供者实现)</li>
+<li>提供者注册API(系统用于注册实现)</li>
+<li>服务访问API(客户端英语获取服务实例)</li>
+</ol>
+<h3 id="包和命名">包和命名</h3>
+<p>要尽量避免包名使用可能被经常用于局部变量的名字，这样可能导致用户重命名导入包，例如前面看到的path包。</p>
+<p>要避免包名有其它的含义，有时避免命名冲突可以有个后缀。与strconv标准包类似的tempconv包名，这个名字比之前的就好多了。</p>
+<p>conv	convenient	便利店、方便</p>
+<h3 id="工具">工具</h3>
+<h4 id="工作区结构">工作区结构</h4>
+<p>GOPATH环境变量，用来指定当前工作目录即可。当需要切换到不同工作区的时候，只要更新GOPATH就可以了</p>
+<p>GOPATH对应的工作区目录有三个子目录。其中src子目录用于存储源代码。每个包被保存在与$GOPATH/src的相对路径为包导入路径的子目录中，其中pkg子目录用于保存编译后的包的目标文件，bin子目录用于保存编译后的可执行程序</p>
+<h4 id="构建包">构建包</h4>
+<p><code>go build</code>命令编译命令行参数指定的每个包。如果包是一个库，则忽略输出结果；这可以用于检测包是可以正确编译的。如果包的名字是main，<code>go build</code>将调用链接器在当前目录创建一个可执行程序；以导入路径的最后一段作为可执行程序的名字。</p>
+<p>默认情况下，<code>go build</code>命令构建指定的包和它依赖的包，<strong>然后丢弃除了最后的可执行文件之外所有的中间编译结果</strong>。</p>
+<p><code>go install</code>命令和<code>go build</code>命令很相似，但是它会保存每个包的编译成果，而不是将它们都丢弃。被编译的包会被保存到<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>G</mi><mi>O</mi><mi>P</mi><mi>A</mi><mi>T</mi><mi>H</mi><mi mathvariant="normal">/</mi><mi>p</mi><mi>k</mi><mi>g</mi><mi mathvariant="normal">目</mi><mi mathvariant="normal">录</mi><mi mathvariant="normal">下</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">目</mi><mi mathvariant="normal">录</mi><mi mathvariant="normal">路</mi><mi mathvariant="normal">径</mi><mi mathvariant="normal">和</mi><mi>s</mi><mi>r</mi><mi>c</mi><mi mathvariant="normal">目</mi><mi mathvariant="normal">录</mi><mi mathvariant="normal">路</mi><mi mathvariant="normal">径</mi><mi mathvariant="normal">对</mi><mi mathvariant="normal">应</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">可</mi><mi mathvariant="normal">执</mi><mi mathvariant="normal">行</mi><mi mathvariant="normal">程</mi><mi mathvariant="normal">序</mi><mi mathvariant="normal">被</mi><mi mathvariant="normal">保</mi><mi mathvariant="normal">存</mi><mi mathvariant="normal">到</mi></mrow><annotation encoding="application/x-tex">GOPATH/pkg目录下，目录路径和 src目录路径对应，可执行程序被保存到</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">G</span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mord mathdefault" style="margin-right:0.13889em;">P</span><span class="mord mathdefault">A</span><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="mord mathdefault" style="margin-right:0.08125em;">H</span><span class="mord">/</span><span class="mord mathdefault">p</span><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="mord mathdefault" style="margin-right:0.03588em;">g</span><span class="mord cjk_fallback">目</span><span class="mord cjk_fallback">录</span><span class="mord cjk_fallback">下</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">目</span><span class="mord cjk_fallback">录</span><span class="mord cjk_fallback">路</span><span class="mord cjk_fallback">径</span><span class="mord cjk_fallback">和</span><span class="mord mathdefault">s</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord mathdefault">c</span><span class="mord cjk_fallback">目</span><span class="mord cjk_fallback">录</span><span class="mord cjk_fallback">路</span><span class="mord cjk_fallback">径</span><span class="mord cjk_fallback">对</span><span class="mord cjk_fallback">应</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">可</span><span class="mord cjk_fallback">执</span><span class="mord cjk_fallback">行</span><span class="mord cjk_fallback">程</span><span class="mord cjk_fallback">序</span><span class="mord cjk_fallback">被</span><span class="mord cjk_fallback">保</span><span class="mord cjk_fallback">存</span><span class="mord cjk_fallback">到</span></span></span></span>GOPATH/bin目录。（很多用户会将$GOPATH/bin添加到可执行程序的搜索列表中。）还有，<code>go install</code>命令和<code>go build</code>命令都不会重新编译没有发生变化的包，这可以使后续构建更快捷。为了方便编译依赖的包，<code>go build -i</code>命令将安装每个目标所依赖的包。</p>
+<h2 id="测试">测试</h2>
+<p>go test命令是一个按照一定的约定和组织来测试代码的程序。在包目录内，所有以<code>_test.go</code>为后缀名的源文件在执行go build时不会被构建成包的一部分，它们是go test测试的一部分。</p>
+<h3 id="测试函数">测试函数</h3>
+<p>每个测试函数必须导入testing包。测试函数有如下的签名：</p>
+<pre><code class="language-Go">func TestName(t *testing.T) {
+    // ...
+}
+</code></pre>
+<p>测试函数的名字必须以Test开头，可选的后缀名必须以大写字母开头：</p>
+<pre><code class="language-Go">func TestSin(t *testing.T) { /* ... */ }
+func TestCos(t *testing.T) { /* ... */ }
+func TestLog(t *testing.T) { /* ... */ }
+</code></pre>
+<p>参数<code>-v</code>可用于打印每个测试函数的名字和运行时间</p>
+<p>参数<code>-run</code>对应一个正则表达式，只有测试函数名被它正确匹配的测试函数才会被<code>go test</code>测试命令运行：</p>
+<pre><code>$ go test -v -run=&quot;French|Canal&quot;
+</code></pre>
+<p>以上会运行测试函数名有French或者Canal</p>
+<h4 id="随机测试">随机测试</h4>
+<p>有两种处理策略。第一个是编写另一个对照函数，使用简单和清晰的算法，虽然效率较低但是行为和要测试的函数是一致的，然后针对相同的随机输入检查两者的输出结果。第二种是生成的随机输入的数据遵循特定的模式，这样我们就可以知道期望的输出的模式。</p>
+<h4 id="白盒测试">白盒测试</h4>
+<p>黑盒测试只需要测试包公开的文档和API行为，内部实现对测试代码是透明的。相反，白盒测试有访问包内部函数和数据结构的权限，因此可以做到一些普通客户端无法实现的测试(cr)</p>
+<h3 id="测试覆盖率">测试覆盖率</h3>
+<p>“测试能证明缺陷存在，而无法证明没有缺陷。”再多的测试也不能证明一个程序没有BUG。需要将测试覆盖率尽可能把情况覆盖完成</p>
+<h3 id="基准测试">基准测试</h3>
+<p>在Go语言中，基准测试函数和普通测试函数写法类似，<strong>但是以Benchmark为前缀名</strong>，并且带有一个<code>*testing.B</code>类型的参数；<code>*testing.B</code>参数除了提供和<code>*testing.T</code>类似的方法，还有额外一些和性能测量相关的方法。它还提供了一个整数N，用于指定操作执行的循环次数。</p>
+<p>下面是IsPalindrome函数的基准测试，其中循环将执行N次。</p>
+<pre><code class="language-Go">import &quot;testing&quot;
+
+func BenchmarkIsPalindrome(b *testing.B) {
+    for i := 0; i &lt; b.N; i++ {
+        IsPalindrome(&quot;A man, a plan, a canal: Panama&quot;)
+    }
+}
+</code></pre>
+<p>我们需要通过<code>-bench</code>命令行标志参数手工指定要运行的基准测试函数。该参数是一个正则表达式，用于匹配要执行的基准测试函数的名字，默认值是空的。其中“.”模式将可以匹配所有基准测试函数，但因为这里只有一个基准测试函数，因此和<code>-bench=IsPalindrome</code>参数是等价的效果。</p>
+<p>毫无疑问，对效率的片面追求会导致各种滥用。程序员会浪费大量的时间在非关键程序的速度上，实际上这些尝试提升效率的行为反倒可能产生很大的负面影响，特别是当调试和维护的时候。我们不应该过度纠结于细节的优化，应该说约97%的场景：过早的优化是万恶之源。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E5%8C%85%E5%92%8C%E5%B7%A5%E5%85%B7">包和工具</a>
+<ul>
+<li><a href="#%E7%89%B9%E6%80%A7">特性</a></li>
+<li><a href="#%E5%AF%BC%E5%85%A5%E8%B7%AF%E5%BE%84">导入路径</a></li>
+<li><a href="#%E5%8C%85%E5%A3%B0%E6%98%8E">包声明</a></li>
+<li><a href="#%E5%8C%85%E7%9A%84%E5%8C%BF%E5%90%8D%E5%AF%BC%E5%85%A5">包的匿名导入</a>
+<ul>
+<li><a href="#%E7%A4%BA%E4%BE%8B">示例</a></li>
+</ul>
+</li>
+<li><a href="#%E5%8C%85%E5%92%8C%E5%91%BD%E5%90%8D">包和命名</a></li>
+<li><a href="#%E5%B7%A5%E5%85%B7">工具</a>
+<ul>
+<li><a href="#%E5%B7%A5%E4%BD%9C%E5%8C%BA%E7%BB%93%E6%9E%84">工作区结构</a></li>
+<li><a href="#%E6%9E%84%E5%BB%BA%E5%8C%85">构建包</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E6%B5%8B%E8%AF%95">测试</a>
+<ul>
+<li><a href="#%E6%B5%8B%E8%AF%95%E5%87%BD%E6%95%B0">测试函数</a>
+<ul>
+<li><a href="#%E9%9A%8F%E6%9C%BA%E6%B5%8B%E8%AF%95">随机测试</a></li>
+<li><a href="#%E7%99%BD%E7%9B%92%E6%B5%8B%E8%AF%95">白盒测试</a></li>
+</ul>
+</li>
+<li><a href="#%E6%B5%8B%E8%AF%95%E8%A6%86%E7%9B%96%E7%8E%87">测试覆盖率</a></li>
+<li><a href="#%E5%9F%BA%E5%87%86%E6%B5%8B%E8%AF%95">基准测试</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/fu-wu-ti-gong-zhe-kuang-jia-zai-jdbc-zhong-de-ying-yong/">
+              <h3 class="post-title">
+                服务提供者框架在jdbc中的应用
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
