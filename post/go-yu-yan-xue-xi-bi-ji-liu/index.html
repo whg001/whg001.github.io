@@ -1,0 +1,286 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>go语言学习笔记六 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1640504544244">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="go语言学习笔记六 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="反射
+能够在运行时更新变量和检查它们的值、调用它们的方法和它们支持的内在操作，而不需要在编译时就知道这些变量的类型。这种机制被称为反射。反射也可以让我们将类型本身作为第一类的值类型处理。
+
+个人觉得类似一个镜子，你能通过他看到其具体情况，并..." />
+    <meta name="keywords" content="go,原创" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1640504544244" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              go语言学习笔记六
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-12-26
+              </span>
+              <span>
+                7 min read
+              </span>
+              
+                <a href="https://whg001.github.io/tag/35CThEehJ/" class="post-tag">
+                  # go
+                </a>
+              
+                <a href="https://whg001.github.io/tag/qCSWQaDUs/" class="post-tag">
+                  # 原创
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://whg001.github.io/post-images/go-yu-yan-xue-xi-bi-ji-liu.png" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h2 id="反射">反射</h2>
+<p>能够在运行时更新变量和检查它们的值、调用它们的方法和它们支持的内在操作，而不需要在编译时就知道这些变量的类型。这种机制被称为反射。反射也可以让我们将类型本身作为第一类的值类型处理。</p>
+<blockquote>
+<p>个人觉得类似一个镜子，你能通过他看到其具体情况，并不是你以为，而是实际情况</p>
+</blockquote>
+<h3 id="为什么需要反射">为什么需要反射</h3>
+<p>有时候我们需要编写一个函数能够处理一类并不满足普通公共接口的类型的值，<strong>也可能是因为它们并没有确定的表示方式，或者是在我们设计该函数的时候这些类型可能还不存在</strong>。</p>
+<blockquote>
+<p>在数据库那块orm，新增数据，更新数据就需要这种反射根据参数与实体不同自动生成不同sql。</p>
+</blockquote>
+<h3 id="reflecttype-和-reflectvalue">reflect.Type 和 reflect.Value</h3>
+<p>反射是由 reflect 包提供的。它定义了两个重要的类型，Type 和 Value。一个 Type 表示一个Go类型。</p>
+<h4 id="type">Type</h4>
+<p>函数 reflect.TypeOf 接受任意的 interface{} 类型，并以 reflect.Type 形式返回其动态类型.</p>
+<p>reflect.Type 接口是满足 fmt.Stringer 接口的。因为打印一个接口的动态类型对于调试和日志是有帮助的， fmt.Printf 提供了一个缩写 %T 参数，内部使用 reflect.TypeOf 来输出：</p>
+<pre><code class="language-Go">fmt.Printf(&quot;%T\n&quot;, 3) // &quot;int&quot;
+</code></pre>
+<figure data-type="image" tabindex="1"><img src="https://whg001.github.io/post-images/1640504467813.png" alt="" loading="lazy"></figure>
+<h4 id="value">Value</h4>
+<p>一个 reflect.Value 可以装载任意类型的值。函数 reflect.ValueOf 接受任意的 interface{} 类型，并返回一个装载着其动态值的 reflect.Value。和 reflect.TypeOf 类似，reflect.ValueOf 返回的结果也是具体的类型，但是 reflect.Value 也可以持有一个接口值。</p>
+<figure data-type="image" tabindex="2"><img src="https://whg001.github.io/post-images/1640504483232.png" alt="" loading="lazy"></figure>
+<p>reflect.Value 的 Kind 方法可以返回其对应的类型。</p>
+<p>Value里面包含所有类型的基本方法(结构体，map，接口，指针...)。你可以通过他获得对应对象的具体类型，遍历其值等</p>
+<figure data-type="image" tabindex="3"><img src="https://whg001.github.io/post-images/1640504505017.png" alt="" loading="lazy"></figure>
+<h4 id="通过value改变值">通过Value改变值</h4>
+<p>有一些reflect.Values是可取地址的；其它一些则不可以。考虑以下的声明语句：</p>
+<pre><code class="language-Go">x := 2                   // value   type    variable?
+a := reflect.ValueOf(2)  // 2       int     no
+b := reflect.ValueOf(x)  // 2       int     no
+c := reflect.ValueOf(&amp;x) // &amp;x      *int    no
+d := c.Elem()            // 2       int     yes (x)
+</code></pre>
+<p>a,b,c都是副本2的副本，x的副本，指针<code>&amp;x</code>的拷贝。**实际上，所有通过reflect.ValueOf(x)返回的reflect.Value都是不可取地址的。**但是对于d，它是c的解引用方式生成的，指向另一个变量，因此是可取地址的。<strong>我们可以通过调用reflect.ValueOf(&amp;x).Elem()，来获取任意变量x对应的可取地址的Value</strong>。</p>
+<p>我们可以通过调用reflect.Value的CanAddr方法来判断其是否可以被取地址。</p>
+<p>要从变量对应的可取地址的reflect.Value来访问变量需要三个步骤。第一步是调用Addr()方法，它返回一个Value，里面保存了指向变量的指针。然后是在Value上调用Interface()方法，也就是返回一个interface{}，里面包含指向变量的指针。最后，如果我们知道变量的类型，我们可以使用类型的断言机制将得到的interface{}类型的接口强制转为普通的类型指针。这样我们就可以通过这个普通指针来更新变量了：</p>
+<pre><code class="language-Go">x := 2
+d := reflect.ValueOf(&amp;x).Elem()   // d refers to the variable x
+px := d.Addr().Interface().(*int) // px := &amp;x
+*px = 3                           // x = 3
+fmt.Println(x)                    // &quot;3&quot;
+</code></pre>
+<p>或者，不使用指针，而是通过调用可取地址的reflect.Value的reflect.Value.Set方法来更新对应的值：</p>
+<pre><code class="language-Go">d.Set(reflect.ValueOf(4))
+fmt.Println(x) // &quot;4&quot;
+</code></pre>
+<p>Set方法将在运行时执行和编译时进行类似的可赋值性约束的检查。以上代码，变量和值都是int类型，但是如果变量是int64类型，那么程序将抛出一个panic异常，所以关键问题是要确保改类型的变量可以接受对应的值</p>
+<p>同样，对一个不可取地址的reflect.Value调用Set方法也会导致panic异常。</p>
+<p>我们发现反射可以越过Go语言的导出规则的限制读取结构体中未导出的成员，比如在类Unix系统上os.File结构体中的fd int成员。然而，利用反射机制并不能修改这些未导出的成员</p>
+<h2 id="unsafe">unsafe</h2>
+<p>通过其可以查看对应数据在底层的数据情况</p>
+<h4 id="unsafesizeof-alignof-和-offsetof">unsafe.Sizeof, Alignof 和 Offsetof</h4>
+<p>unsafe.Sizeof函数返回操作数在内存中的字节大小，参数可以是任意类型的表达式，但是它并不会对表达式进行求值。一个Sizeof函数调用是一个对应uintptr类型的常量表达式，因此返回的结果可以用作数组类型的长度大小，或者用作计算其他的常量。</p>
+<p><strong>Sizeof函数返回的大小只包括数据结构中固定的部分，例如字符串对应结构体中的指针和字符串长度部分</strong>，但是并不包含指针指向的字符串的内容。</p>
+<p><code>unsafe.Alignof</code> 函数返回对应参数的类型需要对齐的倍数。和 Sizeof 类似， Alignof 也是返回一个常量表达式，对应一个常量。通常情况下布尔和数字类型需要对齐到它们本身的大小（最多8个字节），其它的类型对齐到机器字大小。</p>
+<p><code>unsafe.Offsetof</code> 函数的参数必须是一个字段 <code>x.f</code>，然后返回 <code>f</code> 字段相对于 <code>x</code> 起始地址的偏移量，包括可能的空洞。</p>
+<h3 id="unsafepointer">unsafe.Pointer</h3>
+<p>大多数指针类型会写成<code>*T</code>，表示是“一个指向T类型变量的指针”。unsafe.Pointer是特别定义的一种指针类型（译注：类似C语言中的<code>void*</code>类型的指针），它可以包含任意类型变量的地址。当然，我们不可以直接通过<code>*p</code>来获取unsafe.Pointer指针指向的真实变量的值，因为我们并不知道变量的具体类型。和普通指针一样，unsafe.Pointer指针也是可以比较的，并且支持和nil常量比较判断是否为空指针。</p>
+<p>一个普通的<code>*T</code>类型指针可以被转化为unsafe.Pointer类型指针，并且一个unsafe.Pointer类型指针也可以被转回普通的指针，被转回普通的指针类型并不需要和原始的<code>*T</code>类型相同</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E5%8F%8D%E5%B0%84">反射</a>
+<ul>
+<li><a href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E5%8F%8D%E5%B0%84">为什么需要反射</a></li>
+<li><a href="#reflecttype-%E5%92%8C-reflectvalue">reflect.Type 和 reflect.Value</a>
+<ul>
+<li><a href="#type">Type</a></li>
+<li><a href="#value">Value</a></li>
+<li><a href="#%E9%80%9A%E8%BF%87value%E6%94%B9%E5%8F%98%E5%80%BC">通过Value改变值</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#unsafe">unsafe</a><br>
+*
+<ul>
+<li><a href="#unsafesizeof-alignof-%E5%92%8C-offsetof">unsafe.Sizeof, Alignof 和 Offsetof</a></li>
+<li><a href="#unsafepointer">unsafe.Pointer</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/tcp-yu-udp-xiang-jie/">
+              <h3 class="post-title">
+                TCP与UDP 详解
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
