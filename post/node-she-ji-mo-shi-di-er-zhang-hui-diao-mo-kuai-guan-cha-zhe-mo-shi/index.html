@@ -1,0 +1,492 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>node设计模式第二章-回调/模块/观察者模式 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1641735795208">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="node设计模式第二章-回调/模块/观察者模式 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="回调
+闭包的概念: 一个函数和对其周围状态（lexical environment，词法环境）的引用捆绑在一起（或者说函数被引用包围），这样的组合就是闭包（closure）。也就是说，闭包让你可以在一个内层函数中访问到其外层函数的作用域。
+..." />
+    <meta name="keywords" content="js" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1641735795208" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              node设计模式第二章-回调/模块/观察者模式
+            </h2>
+            <div class="post-info">
+              <span>
+                2022-01-09
+              </span>
+              <span>
+                12 min read
+              </span>
+              
+                <a href="https://whg001.github.io/tag/epTCQykWR/" class="post-tag">
+                  # js
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://whg001.github.io/post-images/node-she-ji-mo-shi-di-er-zhang-hui-diao-mo-kuai-guan-cha-zhe-mo-shi.png" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h2 id="回调">回调</h2>
+<p>闭包的概念: 一个函数和对其周围状态（<strong>lexical environment，词法环境</strong>）的引用捆绑在一起（或者说函数被引用包围），这样的组合就是<strong>闭包</strong>（<strong>closure</strong>）。也就是说，闭包让你可以在一个内层函数中访问到其外层函数的作用域。</p>
+<p>闭包可以模拟私有方法。</p>
+<pre><code class="language-js">var Counter = (function() {
+  var privateCounter = 0;
+  function changeBy(val) {
+    privateCounter += val;
+  }
+  return {
+    increment: function() {
+      changeBy(1);
+    },
+    decrement: function() {
+      changeBy(-1);
+    },
+    value: function() {
+      return privateCounter;
+    }
+  }
+})();
+
+console.log(Counter.value()); /* logs 0 */
+Counter.increment();
+Counter.increment();
+console.log(Counter.value()); /* logs 2 */
+Counter.decrement();
+console.log(Counter.value()); /* logs 1 */
+</code></pre>
+<h3 id="cpscontinuation-passing-style">cps（continuation passing style）</h3>
+<p>回调，是一个作为参数传递给另一个函数的函数，当操作完成时将调用该函数，在函数编程中，这种传播方式称为cps, 这是一个通用概念，并不总是与异步操作关联</p>
+<p>cps即表示通过将结果传递给另一个函数（回调）而使结果传播，而不是直接返回给调用者。</p>
+<p>同步函数会发生阻塞，直到它完成操作，异步函数会立即返回，并且在事件循环的后续周期将结果传递给处理程序（回调）</p>
+<h3 id="回调约定">回调约定</h3>
+<p>回调函数置尾，当一个函数在输入中接受一个回调时，它必须作为最后一个参数传递</p>
+<p>暴露错误优先，cps函数产生的任何错误总是作为回调的第一个参数传递</p>
+<p>传播错误，在异步cps中，可以将错误简单传递到链中的下一个回调来进行正确的错误传播</p>
+<p>未捕获异常，在异步回调中抛出异常将导致异常跳转到事件循环，并且不会传播到下一个回调，在nodejs中这是一个不可恢复的状态，应用程序将简单地关闭并输出错误到stderr接口。</p>
+<h2 id="模块">模块</h2>
+<p>模块用于构造程序时，隐藏信息保护一些函数等。CommonJS 是一个旨在标准化JavaScript生态系统的团体，其中最受欢迎的提案之一称为 CommonJS模块， nodejs在这个规范之上构建了模块系统。</p>
+<p>书中写了一个简单代码来能让人快速理解其中模块的构造</p>
+<p>function loadModule(filename, module, require){</p>
+<pre><code class="language-js">function loadModule(filename, module, require){
+	const wrappedSrc = `(function(module, exports, require){
+    ${fs.readFileSync(filename, 'utf8')}
+  })(module, module.exports, require);` ;
+  eval(wrappedSrc);
+}
+</code></pre>
+<p>模块的源代码基本上被包装到一个函数中，将变量列表 module exports require 传递给了模块</p>
+<p>require加在模块的示例</p>
+<pre><code class="language-js"> const require = (moduleName) =&gt; {
+  console.log(`Require invoked for module: ${moduleName}`);
+  const id = require.resolve(moduleName); //[1] 模块名称被接受作为输入， 解析模块的完整路径，称之为id, 由 require.resolve 完成，它实现了一个特定的解析算法
+  if(require.cache[id]) {                 //[2] 如果已经加载过模块，那应该在缓存中，所以可以直接从缓存返回
+    return require.cache[id].exports;
+  }
+
+  //module metadata
+  const module = {                        //[3] 如果模块没有加载，需要为首次加载设置运行环境，创建一个module对象，其中包含用空对象字面量初始化的 exports属性， 该属性将用于模块的代码导出任何公共API
+    exports: {},
+    id: id
+  };
+  //Update the cache
+  require.cache[id] = module;             //[4] module 对象被缓存
+  //load the module
+  loadModule(id, module, require);        //[5] 模块源代码从其文件被读取，代码被评估， 通过操作或替换 module.exports 对象来导出其公共API
+  //return exported variables
+  return module.exports;                  //[6] module.exports 的内容表示模块的公共API， 返回给调用者
+};
+require.cache = {};
+require.resolve = (moduleName) =&gt; {
+     /* resolve a full module id from the moduleName */
+};
+</code></pre>
+<p>简要概述就是require加载对应的模块之后，将其模块中的module.exports返回给require。</p>
+<h4 id="exports与moduleexports"><strong>exports与module.exports</strong></h4>
+<p>使用时经常看到这2个却不晓得其区别，查阅资料如下</p>
+<p>从上面的require函数可以知道，require是将module.exports返回出去。那么exports呢</p>
+<p>exports变量，为了方便，Node为每个模块提供一个exports变量，指向module.exports。这等同在每个模块头部，有一行这样的命令。</p>
+<pre><code class="language-js">var exports = module.exports;
+</code></pre>
+<p>造成的结果是，在对外输出模块接口时，可以向exports对象添加方法。</p>
+<pre><code class="language-js">exports.area = function (r) {
+  return Math.PI * r * r;
+};
+
+exports.circumference = function (r) {
+  return 2 * Math.PI * r;
+};
+</code></pre>
+<p>不能直接将exports变量指向一个值，因为这样等于切断了<code>exports</code>与<code>module.exports</code>的联系。</p>
+<pre><code class="language-js">exports = function(x) {console.log(x)};
+</code></pre>
+<p>下面的写法也是无效的。</p>
+<pre><code class="language-js">exports.hello = function() {
+  return 'hello';
+};
+
+module.exports = 'Hello world';
+</code></pre>
+<p>上面代码中，<code>hello</code>函数是无法对外输出的，因为<code>module.exports</code>被重新赋值了。</p>
+<p><strong>总结而来，exports默认指向了module.exports的引用地址，在不改变exports地址和不重新赋值module.exports的情况下，他们是等价的</strong></p>
+<p>require函数是同步的。</p>
+<h4 id="模块解析规则">模块解析规则</h4>
+<p>解析主要分为三个主要部分，文件模块，核心模块，包模块</p>
+<ol>
+<li>
+<p>文件模块：如果moduleName以/开头，则被视为模块的绝对路径，如果以 ./ 开头，则被视为相对路径</p>
+</li>
+<li>
+<p>核心模块：如果moduleName没有前缀/ ./ ， 则算法首先尝试从nodejs核心模块中搜索</p>
+</li>
+<li>
+<p>包模块：如果在核心模块中没找到与moduleName 匹配的，就在所在目录的 node_modules 目录下面查找，并从所在目录结构中向上导航，直至在路径上的node_modules目录下面找到了为止，否则报错。</p>
+</li>
+</ol>
+<p>对于文件或者包模块，单个文件和目录都可以与moduleName匹配。算法将会尝试匹配以下</p>
+<ul>
+<li><moduleName>.js</li>
+<li><moduleName>/index.js</li>
+<li><moduleName>/package.json</li>
+</ul>
+<p>node_module目录实际是npm安装每个包依赖的地方。每个包都是可以有自己私有依赖。</p>
+<p><strong>模块缓存</strong></p>
+<p>每个模块仅在第一次需要时才加载和评估，后续任何require调用都将简单地返回缓存的版本，模块缓存通过 require.cache 变量公开， 因此如果需要，可以直接访问</p>
+<p>使用缓存使得模块依赖项中可以有循环， 在某种程度上保证在给定包中需要相同模块时总是返回相同的实例。</p>
+<p><strong>循环依赖</strong></p>
+<p>循环以来可能导致模块加载不完整，应该避免循环依赖。<strong>而且其不会在编译期发现</strong>，容易引发bug</p>
+<h4 id="模块定义模式">模块定义模式</h4>
+<p>最大限度的隐藏信息和API可用性，可扩展性，代码重用</p>
+<h4 id="命名导出">命名导出</h4>
+<p>导出一个公开接口最基本的方式是使用命名导出，即把我们想导出的值赋给 exports （或者 module.exports）</p>
+<h4 id="导出函数">导出函数</h4>
+<p>给整个 module.exports 赋值一个函数也是一种非常流行的方式。主要的优点是只导出一个功能更加清晰明了，这被社区叫作垂直模式（substack pattern）。</p>
+<h4 id="暴露构建器">暴露构建器</h4>
+<p>暴露构建器专门用于暴露函数。不同的是这种模式允许我们使用构建器创建一个新的实例，但是我们可以扩展原型并伪造新的类。</p>
+<pre><code class="language-js">//file logger.js
+function Logger(name) {
+ this.name = name;
+}
+Logger.prototype.log = function(message) {
+ console.log(`[${this.name}] ${message}`);
+};
+Logger.prototype.info = function(message) {
+ this.log(`info: ${message}`);
+};
+Logger.prototype.verbose = function(message) {
+ this.log(`verbose: ${message}`);
+};
+module.exports = Logger;
+
+//file main.js
+const Logger = require('./logger');
+const dbLogger = new Logger('DB');
+dbLogger.info('This is an informational message');
+const accessLogger = new Logger('ACCESS');
+accessLogger.verbose('This is a verbose message');
+</code></pre>
+<p>如上就是常用的导出构造函数，使其类更利于拓展，增加其灵活性。<strong>在taf中其log也是这种形式的导出，便于我们封装出我们想要的类</strong>。</p>
+<h4 id="暴露一个实例">暴露一个实例</h4>
+<p>在常用的业务代码中service，dao层通常都是暴露一个实例，因为其中的方法都是无状态的，不需要有多个实例。</p>
+<pre><code class="language-js">module.exports = new Logger();
+</code></pre>
+<h2 id="观察者模式">观察者模式</h2>
+<p>观察者模式，常用设计模式之一，其定义了一个对象，当他的状态发生改变时，他可以通知一组观察者。</p>
+<h4 id="eventemitter">EventEmitter</h4>
+<p>观察者模式已经被构建到 node 核心中并以 EventEmitter 类暴露。EventEmitter 允许我们注册一个或多个监听器。</p>
+<p>一些触发器的基础方法：</p>
+<ul>
+<li>on(event, listener): 这个方法允许我们来为给定的事件注册一个新的监听器</li>
+<li>once(event, listener): 这个方法注册一个新的监听器且只监听一次</li>
+<li>emit(event, [arg1], [...]): 这个方法将产生新的事件并可传入多个参数</li>
+<li>removeListener(event, listener): 这个方法移除事件的监听器</li>
+</ul>
+<p>因为所有的方法都会返回 EventEmitter 实例所以你可以进行串联。监听函数只接受发射器上发射的参数。</p>
+<p>我们可以发现很多与回调不同的地方，尤其是第一个参数不再是 error 对象。</p>
+<h5 id="示例">示例</h5>
+<pre><code class="language-js">const EventEmitter = require('events').EventEmitter;
+   const fs = require('fs');
+   function findPattern(files, regex) {
+     const emitter = new EventEmitter();
+     files.forEach(function(file) {
+       fs.readFile(file, 'utf8', (err, content) =&gt; {
+         if(err)
+           return emitter.emit('error', err);
+         emitter.emit('fileread', file);
+         let match;
+         if(match = content.match(regex))
+           match.forEach(elem =&gt; emitter.emit('found', file, elem));
+       });
+    });
+    return emitter;
+}
+
+findPattern(
+       ['fileA.txt', 'fileB.json'],
+       /hello \w+/g
+     )
+     .on('fileread', file =&gt; console.log(file + ' was read'))
+     .on('found', (file, match) =&gt; console.log('Matched &quot;' + match +
+       '&quot; in file ' + file))
+     .on('error', err =&gt; console.log('Error emitted: ' + err.message));
+</code></pre>
+<p>创建好的发射器产生三个事件：</p>
+<ul>
+<li>fileread: 文件被读取时发生</li>
+<li>found: 匹配找到时发生</li>
+<li>error: 在读取文件发生错误时触发</li>
+</ul>
+<h5 id="传递错误">传递错误</h5>
+<p>EventEmitter 在回掉内出现时不会在错误发生时抛出一个异常，因为如果事件是被异步触发的那么它将在事件轮询内丢失。<strong>每次都注册一个监听 error 事件的监听器是一项最佳实践</strong>，因为 Node.js 将以一种特别的方式来处理它然后再抛出一个异常，并在没有发现相关监听器时退出程序。</p>
+<h4 id="观察一切对象">观察一切对象</h4>
+<p>有时直接从 EventEmitter 类创建一个新的对象还不够，因为提供生成新事件以外的功能不切实际。我们可以<strong>拓展EventEmitter类</strong>，来实现</p>
+<p>示例</p>
+<pre><code class="language-js">const EventEmitter = require('events').EventEmitter;
+   const fs = require('fs');
+   class FindPattern extends EventEmitter {
+     constructor (regex) {
+       super();
+       this.regex = regex;
+       this.files = [];
+     }
+     addFile (file) {
+       this.files.push(file);
+       return this;
+     }
+     find () {
+       this.files.forEach( file =&gt; {
+         fs.readFile(file, 'utf8', (err, content) =&gt; {
+           if (err) {
+             return this.emit('error', err);
+           }
+           this.emit('fileread', file);
+           let match = null;
+           if (match = content.match(this.regex)) {
+             match.forEach(elem =&gt; this.emit('found', file, elem));
+           }
+         });
+       });
+       return this;
+     }
+   }
+
+const findPatternObject = new FindPattern(/hello \w+/);
+   findPatternObject
+     .addFile('fileA.txt')
+     .addFile('fileB.json')
+     .find()
+     .on('found', (file, match) =&gt; console.log(`Matched &quot;${match}&quot;
+       in file ${file}`))
+     .on('error', err =&gt; console.log(`Error emitted ${err.message}`));
+</code></pre>
+<h2 id="eventemitter-与回调的选择">EventEmitter 与回调的选择</h2>
+<p>回调在支持不同类型的事件时会有一些限制。 实际上，我们可以传入多种类型的参数来区分事件。 但是这算不上是优雅的 API。在这种情况下 EventEmitter 更适合。</p>
+<p>对另一个函数来说，EventEmitter 可能更适合当相同的事件可以多次发生时。回调实际上只期待被调用一次，无论操作成功与否。当然这里使用 EventEmitter 更合适。</p>
+<p>最后，一个使用回调的接口只可以指定一个回调，而 EventEmitter 可以使用多个监听器来接收相同的事件。</p>
+<p>观察者模式，对于业务类型多的更利于其拓展</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E5%9B%9E%E8%B0%83">回调</a>
+<ul>
+<li><a href="#cpscontinuation-passing-style">cps（continuation passing style）</a></li>
+<li><a href="#%E5%9B%9E%E8%B0%83%E7%BA%A6%E5%AE%9A">回调约定</a></li>
+</ul>
+</li>
+<li><a href="#%E6%A8%A1%E5%9D%97">模块</a><br>
+*
+<ul>
+<li><a href="#exports%E4%B8%8Emoduleexports"><strong>exports与module.exports</strong></a></li>
+<li><a href="#%E6%A8%A1%E5%9D%97%E8%A7%A3%E6%9E%90%E8%A7%84%E5%88%99">模块解析规则</a></li>
+<li><a href="#%E6%A8%A1%E5%9D%97%E5%AE%9A%E4%B9%89%E6%A8%A1%E5%BC%8F">模块定义模式</a></li>
+<li><a href="#%E5%91%BD%E5%90%8D%E5%AF%BC%E5%87%BA">命名导出</a></li>
+<li><a href="#%E5%AF%BC%E5%87%BA%E5%87%BD%E6%95%B0">导出函数</a></li>
+<li><a href="#%E6%9A%B4%E9%9C%B2%E6%9E%84%E5%BB%BA%E5%99%A8">暴露构建器</a></li>
+<li><a href="#%E6%9A%B4%E9%9C%B2%E4%B8%80%E4%B8%AA%E5%AE%9E%E4%BE%8B">暴露一个实例</a></li>
+</ul>
+</li>
+<li><a href="#%E8%A7%82%E5%AF%9F%E8%80%85%E6%A8%A1%E5%BC%8F">观察者模式</a><br>
+*
+<ul>
+<li><a href="#eventemitter">EventEmitter</a>
+<ul>
+<li><a href="#%E7%A4%BA%E4%BE%8B">示例</a></li>
+<li><a href="#%E4%BC%A0%E9%80%92%E9%94%99%E8%AF%AF">传递错误</a></li>
+</ul>
+</li>
+<li><a href="#%E8%A7%82%E5%AF%9F%E4%B8%80%E5%88%87%E5%AF%B9%E8%B1%A1">观察一切对象</a></li>
+</ul>
+</li>
+<li><a href="#eventemitter-%E4%B8%8E%E5%9B%9E%E8%B0%83%E7%9A%84%E9%80%89%E6%8B%A9">EventEmitter 与回调的选择</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/go-yu-yan-xue-xi-bi-ji-liu/">
+              <h3 class="post-title">
+                go语言学习笔记六
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
