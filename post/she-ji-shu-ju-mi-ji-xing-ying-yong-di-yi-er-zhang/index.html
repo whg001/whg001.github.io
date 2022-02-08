@@ -1,0 +1,392 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>设计数据密集型应用第一二章 | haogui</title>
+<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1644324514733">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="设计数据密集型应用第一二章 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="第一章
+第一章主要讲解的是应用系统的可靠性，可拓展性，可维护性的概念信息
+可靠性
+造成错误的原因叫做 故障（fault），能预料并应对故障的系统特性可称为 容错（fault-tolerant） 或 韧性（resilient）。“容错” 一词..." />
+    <meta name="keywords" content="原创,数据库" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://whg001.github.io">
+  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1644324514733" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              设计数据密集型应用第一二章
+            </h2>
+            <div class="post-info">
+              <span>
+                2022-02-08
+              </span>
+              <span>
+                11 min read
+              </span>
+              
+                <a href="https://whg001.github.io/tag/qCSWQaDUs/" class="post-tag">
+                  # 原创
+                </a>
+              
+                <a href="https://whg001.github.io/tag/TBq3smlQX/" class="post-tag">
+                  # 数据库
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="https://whg001.github.io/post-images/she-ji-shu-ju-mi-ji-xing-ying-yong-di-yi-er-zhang.png" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h2 id="第一章">第一章</h2>
+<p>第一章主要讲解的是应用系统的可靠性，可拓展性，可维护性的概念信息</p>
+<h3 id="可靠性">可靠性</h3>
+<p>造成错误的原因叫做 <strong>故障（fault）</strong>，能预料并应对故障的系统特性可称为 <strong>容错（fault-tolerant）</strong> 或 <strong>韧性（resilient）</strong>。“<strong>容错</strong>” 一词可能会产生误导，因为它暗示着系统可以容忍所有可能的错误，但在实际中这是不可能的。比方说，如果整个地球（及其上的所有服务器）都被黑洞吞噬了，想要容忍这种错误，需要把网络托管到太空中 —— 这种预算能不能批准就祝你好运了。所以在讨论容错时，只有<strong>谈论特定类型的错误</strong>才有意义。</p>
+<p>注意 <strong>故障（fault）</strong> 不同于 <strong>失效（failure）</strong>。<strong>故障</strong> 通常定义为系统的一部分状态偏离其标准，而 <strong>失效</strong> 则是系统作为一个整体停止向用户提供服务。故障的概率不可能降到零，因此最好设计容错机制以防因 <strong>故障</strong> 而导致 <strong>失效</strong></p>
+<h3 id="描述性能">描述性能</h3>
+<p>一旦系统的负载被描述好，就可以研究当负载增加会发生什么。我们可以从两种角度来看：</p>
+<ul>
+<li>增加负载参数并保持系统资源（CPU、内存、网络带宽等）不变时，系统性能将受到什么影响？</li>
+<li>增加负载参数并希望保持性能不变时，需要增加多少系统资源？</li>
+</ul>
+<p>一个良好适配应用的可伸缩架构，是围绕着 <strong>假设（assumption）</strong> 建立的：哪些操作是常见的？哪些操作是罕见的？这就是所谓负载参数。如果假设最终是错误的，那么为伸缩所做的工程投入就白费了，最糟糕的是适得其反。在早期创业公司或非正式产品中，通常支持产品快速迭代的能力，要比可伸缩至未来的假想负载要重要的多。</p>
+<h3 id="可维护性">可维护性</h3>
+<p>在设计之初就尽量考虑尽可能减少维护期间的痛苦，从而避免自己的软件系统变成遗留系统。为此，我们将特别关注软件系统的三个设计原则：</p>
+<ul>
+<li>
+<p>可操作性（Operability）</p>
+<p>便于运维团队保持系统平稳运行。</p>
+</li>
+<li>
+<p>简单性（Simplicity）</p>
+<p>从系统中消除尽可能多的 <strong>复杂度（complexity）</strong>，使新工程师也能轻松理解系统（注意这和用户接口的简单性不一样）。</p>
+</li>
+<li>
+<p>可演化性（evolvability）</p>
+<p>使工程师在未来能轻松地对系统进行更改，当需求变化时为新应用场景做适配。也称为 <strong>可伸缩性（extensibility）</strong>、<strong>可修改性（modifiability）</strong> 或 <strong>可塑性（plasticity）</strong>。</p>
+</li>
+</ul>
+<h3 id="简单性管理复杂度">简单性：管理复杂度</h3>
+<p>用于消除 <strong>额外复杂度</strong> 的最好工具之一是 <strong>抽象（abstraction）</strong>。一个好的抽象可以将大量实现细节隐藏在一个干净，简单易懂的外观下面。一个好的抽象也可以广泛用于各类不同应用。比起重复造很多轮子，重用抽象不仅更有效率，而且有助于开发高质量的软件。抽象组件的质量改进将使所有使用它的应用受益。</p>
+<p>例如，<strong>高级编程语言是一种抽象，隐藏了机器码、CPU 寄存器和系统调用。 SQL 也是一种抽象，隐藏了复杂的磁盘 / 内存数据结构、来自其他客户端的并发请求、崩溃后的不一致性</strong>。当然在用高级语言编程时，我们仍然用到了机器码；只不过没有 <strong>直接（directly）</strong> 使用罢了，正是因为编程语言的抽象，我们才不必去考虑这些实现细节。</p>
+<p><strong>抽象可以帮助我们将系统的复杂度控制在可管理的水平</strong>，不过，找到好的抽象是非常困难的。在分布式系统领域虽然有许多好的算法，但我们并不清楚它们应该打包成什么样抽象。</p>
+<h2 id="第二章">第二章</h2>
+<p>本章主要介绍了几种数据模型与其对应的查询语言</p>
+<p>传统关系型数据库与文档模型</p>
+<h3 id="关系型数据库">关系型数据库</h3>
+<h4 id="对象关系不匹配">对象关系不匹配</h4>
+<p>目前大多数应用程序开发都使用面向对象的编程语言来开发，这导致了对 SQL 数据模型的普遍批评：如果数据存储在关系表中，那么需要一个笨拙的转换层，处于应用程序代码中的对象和表，行，列的数据库模型之间。模型之间的不连贯有时被称为 <strong>阻抗不匹配（impedance mismatch）</strong>。</p>
+<p>像 ActiveRecord 和 Hibernate 这样的 <strong>对象关系映射（ORM object-relational mapping）</strong> 框架可以减少这个转换层所需的样板代码的数量，但是它们不能完全隐藏这两个模型之间的差异。</p>
+<blockquote>
+<p>在一对多的情况中如果并不经常需要通过其中属性逆向查找文档，其场景会更加适用。如果应用程序中的数据具有类似文档的结构（即，一对多关系树，通常一次性加载整个树），那么使用文档模型可能是一个好主意。但如果你的应用程序确实会用到多对多关系，那么文档模型就没有那么诱人了。</p>
+</blockquote>
+<p>例如用一个文档模型来表示一个人的简介</p>
+<pre><code class="language-json">{
+  &quot;user_id&quot;: 251,
+  &quot;first_name&quot;: &quot;Bill&quot;,
+  &quot;last_name&quot;: &quot;Gates&quot;,
+  &quot;summary&quot;: &quot;Co-chair of the Bill &amp; Melinda Gates... Active blogger.&quot;,
+  &quot;region_id&quot;: &quot;us:91&quot;,
+  &quot;industry_id&quot;: 131,
+  &quot;photo_url&quot;: &quot;/p/7/000/253/05b/308dd6e.jpg&quot;,
+  &quot;positions&quot;: [
+    {
+      &quot;job_title&quot;: &quot;Co-chair&quot;,
+      &quot;organization&quot;: &quot;Bill &amp; Melinda Gates Foundation&quot;
+    },
+    {
+      &quot;job_title&quot;: &quot;Co-founder, Chairman&quot;,
+      &quot;organization&quot;: &quot;Microsoft&quot;
+    }
+  ],
+  &quot;education&quot;: [
+    {
+      &quot;school_name&quot;: &quot;Harvard University&quot;,
+      &quot;start&quot;: 1973,
+      &quot;end&quot;: 1975
+    },
+    {
+      &quot;school_name&quot;: &quot;Lakeside School, Seattle&quot;,
+      &quot;start&quot;: null,
+      &quot;end&quot;: null
+    }
+  ],
+  &quot;contact_info&quot;: {
+    &quot;blog&quot;: &quot;http://thegatesnotes.com&quot;,
+    &quot;twitter&quot;: &quot;http://twitter.com/BillGates&quot;
+  }
+}
+</code></pre>
+<h3 id="数据查询语言">数据查询语言</h3>
+<p>命令式语言告诉计算机以特定顺序执行某些操作。可以想象一下，逐行地遍历代码，评估条件，更新变量，并决定是否再循环一遍。</p>
+<p>在声明式查询语言（如 SQL 或关系代数）中，你只需指定所需数据的模式 - 结果必须符合哪些条件，以及如何将数据转换（例如，排序，分组和集合） - 但不是如何实现这一目标。数据库系统的查询优化器决定使用哪些索引和哪些连接方法，以及以何种顺序执行查询的各个部分。</p>
+<h4 id="mapreduce查询">MapReduce查询</h4>
+<p>MapReduce 是一个由 Google 推广的编程模型，用于在多台机器上批量处理大规模的数据【33】。一些 NoSQL 数据存储（包括 MongoDB 和 CouchDB）支持有限形式的 MapReduce，作为在多个文档中执行只读查询的机制。</p>
+<p>MapReduce 既不是一个声明式的查询语言，也不是一个完全命令式的查询 API，而是处于两者之间：查询的逻辑用代码片段来表示，这些代码片段会被处理框架重复性调用。它基于 <code>map</code>（也称为 <code>collect</code>）和 <code>reduce</code>（也称为 <code>fold</code> 或 <code>inject</code>）函数，两个函数存在于许多函数式编程语言中。</p>
+<blockquote>
+<p>看了栗子后，觉得他类似一个框架，他将连接等进行了抽象，其具体实现由使用者编写</p>
+</blockquote>
+<p>在 PostgreSQL 中，你可以像这样表述这个查询：</p>
+<pre><code class="language-sql">SELECT
+  date_trunc('month', observation_timestamp) AS observation_month,
+  sum(num_animals)                           AS total_animals
+FROM observations
+WHERE family = 'Sharks'
+GROUP BY observation_month;
+</code></pre>
+<p><code>date_trunc('month'，timestamp)</code> 函数用于确定包含 <code>timestamp</code> 的日历月份，并返回代表该月份开始的另一个时间戳。换句话说，它将时间戳舍入成最近的月份。</p>
+<p>这个查询首先过滤观察记录，以只显示鲨鱼家族的物种，然后根据它们发生的日历月份对观察记录果进行分组，最后将在该月的所有观察记录中看到的动物数目加起来。</p>
+<p>同样的查询用 MongoDB 的 MapReduce 功能可以按如下来表述：</p>
+<pre><code class="language-sql">db.observations.mapReduce(function map() {
+        var year = this.observationTimestamp.getFullYear();
+        var month = this.observationTimestamp.getMonth() + 1;
+        emit(year + &quot;-&quot; + month, this.numAnimals);
+    },
+    function reduce(key, values) {
+        return Array.sum(values);
+    },
+    {
+        query: {
+          family: &quot;Sharks&quot;
+        },
+        out: &quot;monthlySharkReport&quot;
+    });
+</code></pre>
+<ul>
+<li>可以声明式地指定一个只考虑鲨鱼种类的过滤器（这是 MongoDB 特定的 MapReduce 扩展）。</li>
+<li>每个匹配查询的文档都会调用一次 JavaScript 函数 <code>map</code>，将 <code>this</code> 设置为文档对象。</li>
+<li><code>map</code> 函数发出一个键（包括年份和月份的字符串，如 <code>&quot;2013-12&quot;</code> 或 <code>&quot;2014-1&quot;</code>）和一个值（该观察记录中的动物数量）。</li>
+<li><code>map</code> 发出的键值对按键来分组。对于具有相同键（即，相同的月份和年份）的所有键值对，调用一次 <code>reduce</code> 函数。</li>
+<li><code>reduce</code> 函数将特定月份内所有观测记录中的动物数量相加。</li>
+<li>将最终的输出写入到 <code>monthlySharkReport</code> 集合中。</li>
+</ul>
+<h4 id="图数据模型">图数据模型</h4>
+<p>如我们之前所见，多对多关系是不同数据模型之间具有区别性的重要特征。如果你的应用程序大多数的关系是一对多关系（树状结构化数据），或者大多数记录之间不存在关系，那么使用文档模型是合适的。</p>
+<p>但是，要是多对多关系在你的数据中很常见呢？关系模型可以处理多对多关系的简单情况，但是随着数据之间的连接变得更加复杂，将数据建模为图形显得更加自然。</p>
+<p>一个图由两种对象组成：<strong>顶点</strong>（vertices，也称为 <strong>节点</strong>，即 nodes，或 <strong>实体</strong>，即 entities），和 <strong>边</strong>（edges，也称为 <strong>关系</strong>，即 relationships，或 <strong>弧</strong>，即 arcs）。多种数据可以被建模为一个图形。典型的例子包括：</p>
+<ul>
+<li>
+<p>社交图谱</p>
+<p>顶点是人，边指示哪些人彼此认识。</p>
+</li>
+<li>
+<p>网络图谱</p>
+<p>顶点是网页，边缘表示指向其他页面的 HTML 链接。</p>
+</li>
+<li>
+<p>公路或铁路网络</p>
+<p>顶点是交叉路口，边线代表它们之间的道路或铁路线。</p>
+</li>
+</ul>
+<h5 id="cypher-查询语言">Cypher 查询语言</h5>
+<p>Cypher 是属性图的声明式查询语言，为 Neo4j 图形数据库而发明。</p>
+<p>他在查询图相关时更加简单。能够使用简洁命令即可进行相关查询</p>
+<h4 id="三元组存储">三元组存储</h4>
+<p>在三元组存储中，所有信息都以非常简单的三部分表示形式存储（<strong>主语</strong>，<strong>谓语</strong>，<strong>宾语</strong>）。例如，三元组 <strong>(吉姆, 喜欢, 香蕉)</strong> 中，<strong>吉姆</strong> 是主语，<strong>喜欢</strong> 是谓语（动词），<strong>香蕉</strong> 是对象。</p>
+<p>三元组的主语相当于图中的一个顶点。而宾语是下面两者之一：</p>
+<ol>
+<li>原始数据类型中的值，例如字符串或数字。在这种情况下，三元组的谓语和宾语相当于主语顶点上的属性的键和值。例如，<code>(lucy, age, 33)</code> 就像属性 <code>{“age”：33}</code> 的顶点 lucy。</li>
+<li>图中的另一个顶点。在这种情况下，谓语是图中的一条边，主语是其尾部顶点，而宾语是其头部顶点。例如，在 <code>(lucy, marriedTo, alain)</code> 中主语和宾语 <code>lucy</code> 和 <code>alain</code> 都是顶点，并且谓语 <code>marriedTo</code> 是连接他们的边的标签。</li>
+</ol>
+<p>新的非关系型 “NoSQL” 数据存储在两个主要方向上存在分歧：</p>
+<ol>
+<li><strong>文档数据库</strong> 的应用场景是：数据通常是自我包含的，而且文档之间的关系非常稀少。</li>
+<li><strong>图形数据库</strong> 用于相反的场景：任意事物都可能与任何事物相关联。</li>
+</ol>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E7%AC%AC%E4%B8%80%E7%AB%A0">第一章</a>
+<ul>
+<li><a href="#%E5%8F%AF%E9%9D%A0%E6%80%A7">可靠性</a></li>
+<li><a href="#%E6%8F%8F%E8%BF%B0%E6%80%A7%E8%83%BD">描述性能</a></li>
+<li><a href="#%E5%8F%AF%E7%BB%B4%E6%8A%A4%E6%80%A7">可维护性</a></li>
+<li><a href="#%E7%AE%80%E5%8D%95%E6%80%A7%E7%AE%A1%E7%90%86%E5%A4%8D%E6%9D%82%E5%BA%A6">简单性：管理复杂度</a></li>
+</ul>
+</li>
+<li><a href="#%E7%AC%AC%E4%BA%8C%E7%AB%A0">第二章</a>
+<ul>
+<li><a href="#%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93">关系型数据库</a>
+<ul>
+<li><a href="#%E5%AF%B9%E8%B1%A1%E5%85%B3%E7%B3%BB%E4%B8%8D%E5%8C%B9%E9%85%8D">对象关系不匹配</a></li>
+</ul>
+</li>
+<li><a href="#%E6%95%B0%E6%8D%AE%E6%9F%A5%E8%AF%A2%E8%AF%AD%E8%A8%80">数据查询语言</a>
+<ul>
+<li><a href="#mapreduce%E6%9F%A5%E8%AF%A2">MapReduce查询</a></li>
+<li><a href="#%E5%9B%BE%E6%95%B0%E6%8D%AE%E6%A8%A1%E5%9E%8B">图数据模型</a>
+<ul>
+<li><a href="#cypher-%E6%9F%A5%E8%AF%A2%E8%AF%AD%E8%A8%80">Cypher 查询语言</a></li>
+</ul>
+</li>
+<li><a href="#%E4%B8%89%E5%85%83%E7%BB%84%E5%AD%98%E5%82%A8">三元组存储</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://whg001.github.io/post/node-she-ji-mo-shi-di-er-zhang-hui-diao-mo-kuai-guan-cha-zhe-mo-shi/">
+              <h3 class="post-title">
+                node设计模式第二章-回调/模块/观察者模式
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
