@@ -3,10 +3,10 @@
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>ping与http 面试题 | haogui</title>
-<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1696731704184">
+<link rel="shortcut icon" href="http://whg001.github.io/favicon.ico?v=1696734177667">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
-<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
-<link rel="alternate" type="application/atom+xml" title="ping与http 面试题 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="http://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="ping与http 面试题 | haogui - Atom Feed" href="http://whg001.github.io/atom.xml">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
 
 
@@ -23,8 +23,8 @@
     <div class="main">
       <div class="main-content">
         <div class="site-header">
-  <a href="https://whg001.github.io">
-  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1696731704184" alt="">
+  <a href="http://whg001.github.io">
+  <img class="avatar" src="http://whg001.github.io/images/avatar.png?v=1696734177667" alt="">
   </a>
   <h1 class="site-title">
     haogui
@@ -87,11 +87,11 @@
                 4 min read
               </span>
               
-                <a href="https://whg001.github.io/tag/tn4Qmi_gv/" class="post-tag">
+                <a href="http://whg001.github.io/tag/tn4Qmi_gv/" class="post-tag">
                   # 计算机网络
                 </a>
               
-                <a href="https://whg001.github.io/tag/AKBQ_fHnE/" class="post-tag">
+                <a href="http://whg001.github.io/tag/AKBQ_fHnE/" class="post-tag">
                   # 面试
                 </a>
               
@@ -119,7 +119,7 @@
 首先这个肯定是http，或者https 应用层协议，为了方便假设是http，http下面还有传输层协议tcp协议。<br>
 由于第一次tcp连接，那么肯定是要三次握手，这个耗时不能免</p>
 <h3 id="tcp">tcp</h3>
-<figure data-type="image" tabindex="1"><img src="https://whg001.github.io/post-images/1626594819863.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="1"><img src="http://whg001.github.io/post-images/1626594819863.png" alt="" loading="lazy"></figure>
 <p>如上提所示建立连接</p>
 <ol>
 <li>客户端先发送：SYN，seq=x，给服务器</li>
@@ -129,10 +129,10 @@
 <p>其中的响应阶段对应了，tcp中的状态，当客户端发送了ACK时，他就已经变成了ESTABLISHED，就可以发送数据到服务器去了，所以也就是消耗了一次RTT的时间建立tcp连接。<br>
 建立了tcp连接后，就可以发送数据给服务器。</p>
 <p>如果是http通信则可以推断一定是大于2倍ping的时间。<br>
-<img src="https://whg001.github.io/post-images/1626597159518.png" alt="" loading="lazy"></p>
+<img src="http://whg001.github.io/post-images/1626597159518.png" alt="" loading="lazy"></p>
 <p>但是如果是https，那可就又复杂了</p>
 <h3 id="https首次请求">https首次请求</h3>
-<figure data-type="image" tabindex="2"><img src="https://whg001.github.io/post-images/1626597923044.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="2"><img src="http://whg001.github.io/post-images/1626597923044.png" alt="" loading="lazy"></figure>
 <p>HTTPS首次请求需要的网络耗时解释如下：</p>
 <p>三次握手建立TCP连接。耗时一个RTT。</p>
 <p>使用HTTP发起GET请求，服务端返回302跳转到https://。需要一个RTT以及302跳转延时。</p>
@@ -202,7 +202,7 @@
         
           <div class="next-post">
             <div class="next">下一篇</div>
-            <a href="https://whg001.github.io/post/java-xian-cheng-chi/">
+            <a href="http://whg001.github.io/post/java-xian-cheng-chi/">
               <h3 class="post-title">
                 java线程池
               </h3>
@@ -240,7 +240,7 @@
 
         <div class="site-footer">
   转载请著名出处
-  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+  <a class="rss" href="http://whg001.github.io/atom.xml" target="_blank">
     <i class="ri-rss-line"></i> RSS
   </a>
 </div>

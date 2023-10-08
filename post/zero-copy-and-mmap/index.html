@@ -3,10 +3,10 @@
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>zero-copy and mmap | haogui</title>
-<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1696731704184">
+<link rel="shortcut icon" href="http://whg001.github.io/favicon.ico?v=1696734177667">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
-<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
-<link rel="alternate" type="application/atom+xml" title="zero-copy and mmap | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="http://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="zero-copy and mmap | haogui - Atom Feed" href="http://whg001.github.io/atom.xml">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
 
 
@@ -22,8 +22,8 @@
     <div class="main">
       <div class="main-content">
         <div class="site-header">
-  <a href="https://whg001.github.io">
-  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1696731704184" alt="">
+  <a href="http://whg001.github.io">
+  <img class="avatar" src="http://whg001.github.io/images/avatar.png?v=1696734177667" alt="">
   </a>
   <h1 class="site-title">
     haogui
@@ -86,13 +86,13 @@
                 8 min read
               </span>
               
-                <a href="https://whg001.github.io/tag/G6CA4R0rh/" class="post-tag">
+                <a href="http://whg001.github.io/tag/G6CA4R0rh/" class="post-tag">
                   # 操作系统
                 </a>
               
             </div>
             
-              <img class="post-feature-image" src="https://whg001.github.io/post-images/zero-copy-and-mmap.png" alt="">
+              <img class="post-feature-image" src="http://whg001.github.io/post-images/zero-copy-and-mmap.png" alt="">
             
             <div class="post-content-wrapper">
               <div class="post-content">
@@ -122,7 +122,7 @@
 <p>​	<strong>其实说了这么多，你要了解的大概只有你写的程序，运行是运行在用户态的！但是有时你要进行io，通信，等等 访问外部设备这之类的操作，需要用户态才能进行，于是需要进行用户态与内核态的切换，而这些切换都是要消耗资源的(你连线程切换也需要消耗资源)</strong></p>
 <h3 id="以通信为例进行性能比较与原理讲解">以通信为例进行性能比较与原理讲解</h3>
 <h6 id="普通的通信先将磁盘信息进行读取随后在将信息发送出去下图使其具体的实现">普通的通信，先将磁盘信息进行读取，随后在将信息发送出去，下图使其具体的实现</h6>
-<figure data-type="image" tabindex="1"><img src="https://whg001.github.io/post-images/1635082756884.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="1"><img src="http://whg001.github.io/post-images/1635082756884.png" alt="" loading="lazy"></figure>
 <ol>
 <li>JVM执行<code>read()</code>系统调用；</li>
 <li>操作系统从用户态切换到内核态，然后把数据读到内核缓冲区；</li>
@@ -134,11 +134,11 @@
 <p>​	一次通信包含了4次用户态内核态切换，3次文件拷贝(将内核缓冲区的数据发送出去时应该不算拷贝)</p>
 <h6 id="系统级别的zero-copy">系统级别的zero-copy</h6>
 <p>​	 如果有些数据我们不需要进行修改经历上述的4次copy是不是感觉很浪费资源，我们要做的只是将磁盘上的数据发送出去，此时涉及到了zero-copy（linux中通过sendfile()来实现）</p>
-<figure data-type="image" tabindex="2"><img src="https://whg001.github.io/post-images/1635082770303.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="2"><img src="http://whg001.github.io/post-images/1635082770303.png" alt="" loading="lazy"></figure>
 <p>​		在zero-copy中只需要<strong>内核将磁盘信息读取到其内核的缓冲区，随后直接发送出去</strong>，此时只涉及到了1次拷贝，与2次上下切换，这2次是不能减少的所以把这个称为zero-copy，但他有一个缺点就是你不能修改其数据在发送出去所以有些适用有些不适用</p>
 <h6 id="内存映射mmap">内存映射mmap</h6>
 <p>​		内存映射比zero-copy消耗资源但比传统的要好，就是<strong>将磁盘上的那部分空间直接映射</strong>(不晓得怎么描述反正内核可以直接访问那一部分区域，不需要先数据拷贝过来才能进行访问)</p>
-<p><img src="https://whg001.github.io/post-images/1635082793230.png" alt="" loading="lazy"><br>
+<p><img src="http://whg001.github.io/post-images/1635082793230.png" alt="" loading="lazy"><br>
 这里仍然需要4次切换，2次数据拷贝(有的说3次)，跟zero-copy相比他能改变数据，在epoll，nginx，kafaka都用了这个，在java中也有</p>
 <p>Java NIO中有三种<code>ByteBuffer</code>，其api直接使用即可</p>
 <ol>
@@ -147,7 +147,7 @@
 <li><code>MappedByteBuffer</code>：<code>FileChannel.map()</code>调用返回的就是这种缓冲区，这种缓冲区用的也是堆外内存，本质上其实就是对系统调用<code>mmap()</code>的封装，以便通过代码直接操纵映射物理内存数据。</li>
 </ol>
 <h3 id="epoll">epoll</h3>
-<figure data-type="image" tabindex="3"><img src="https://whg001.github.io/post-images/1635082804369.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="3"><img src="http://whg001.github.io/post-images/1635082804369.png" alt="" loading="lazy"></figure>
 <p>参考文章</p>
 <p>http://www.pianshen.com/article/230270085/</p>
 <p>https://www.jianshu.com/p/f28eeca6fdae</p>
@@ -186,7 +186,7 @@
         
           <div class="next-post">
             <div class="next">下一篇</div>
-            <a href="https://whg001.github.io/post/go-de-ji-ben-gai-nian/">
+            <a href="http://whg001.github.io/post/go-de-ji-ben-gai-nian/">
               <h3 class="post-title">
                 go的基本概念
               </h3>
@@ -224,7 +224,7 @@
 
         <div class="site-footer">
   转载请著名出处
-  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+  <a class="rss" href="http://whg001.github.io/atom.xml" target="_blank">
     <i class="ri-rss-line"></i> RSS
   </a>
 </div>

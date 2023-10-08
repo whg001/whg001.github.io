@@ -3,10 +3,10 @@
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Node学习 | haogui</title>
-<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1696731704184">
+<link rel="shortcut icon" href="http://whg001.github.io/favicon.ico?v=1696734177667">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
-<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
-<link rel="alternate" type="application/atom+xml" title="Node学习 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="http://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="Node学习 | haogui - Atom Feed" href="http://whg001.github.io/atom.xml">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
 
 
@@ -21,8 +21,8 @@
     <div class="main">
       <div class="main-content">
         <div class="site-header">
-  <a href="https://whg001.github.io">
-  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1696731704184" alt="">
+  <a href="http://whg001.github.io">
+  <img class="avatar" src="http://whg001.github.io/images/avatar.png?v=1696734177667" alt="">
   </a>
   <h1 class="site-title">
     haogui
@@ -85,13 +85,13 @@
                 6 min read
               </span>
               
-                <a href="https://whg001.github.io/tag/epTCQykWR/" class="post-tag">
+                <a href="http://whg001.github.io/tag/epTCQykWR/" class="post-tag">
                   # js
                 </a>
               
             </div>
             
-              <img class="post-feature-image" src="https://whg001.github.io/post-images/node-xue-xi.png" alt="">
+              <img class="post-feature-image" src="http://whg001.github.io/post-images/node-xue-xi.png" alt="">
             
             <div class="post-content-wrapper">
               <div class="post-content">
@@ -115,10 +115,10 @@
 <h4 id="event-loop">Event Loop</h4>
 <p>&quot;<strong>Event Loop是一个程序结构，用于等待和发送消息和事件。</strong>（a programming construct that waits for and dispatches events or messages in a program.）&quot;</p>
 <p>在程序中设置两个线程：一个负责程序本身的运行，称为&quot;主线程&quot;；另一个负责主线程与其他进程（主要是各种I/O操作）的通信，被称为&quot;Event Loop线程&quot;（可以译为&quot;消息线程&quot;）。</p>
-<figure data-type="image" tabindex="1"><img src="https://whg001.github.io/post-images/1635081169614.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="1"><img src="http://whg001.github.io/post-images/1635081169614.png" alt="" loading="lazy"></figure>
 <p>上图主线程的绿色部分，还是表示运行时间，而橙色部分表示空闲时间。每当遇到I/O的时候，主线程就让Event Loop线程去通知相应的I/O程序，然后接着往后运行，所以不存在红色的等待时间。等到I/O程序完成操作，Event Loop线程再把结果返回主线程。主线程就调用事先设定的回调函数，完成整个任务。</p>
 <h4 id="node的模型">node的模型</h4>
-<figure data-type="image" tabindex="2"><img src="https://whg001.github.io/post-images/1635081187624.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="2"><img src="http://whg001.github.io/post-images/1635081187624.png" alt="" loading="lazy"></figure>
 <p>node.js接受到的请求都会加入到EventQueue中，会等到EventLoop来进行处理，对于EventLoop中有阻塞操作的则会将其加入ThreadPool中等待其准备就绪再加入EventQueue中。</p>
 <h4 id="多进程">多进程</h4>
 <p>node虽然为单线程，但由于其模型结构所以对cpu的利用率还是超高的。但对于现在多核的cpu，单线程是发回不了其真正运算能力。在多核 CPU 系统之上，可以通过 <code>child_process.fork</code> 开启多个进程，即多个进程来发挥多核。</p>
@@ -190,7 +190,7 @@ if (cluster.isMaster) {
         
           <div class="next-post">
             <div class="next">下一篇</div>
-            <a href="https://whg001.github.io/post/js-ji-chu-xue-xi/">
+            <a href="http://whg001.github.io/post/js-ji-chu-xue-xi/">
               <h3 class="post-title">
                 JS基础学习
               </h3>
@@ -228,7 +228,7 @@ if (cluster.isMaster) {
 
         <div class="site-footer">
   转载请著名出处
-  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+  <a class="rss" href="http://whg001.github.io/atom.xml" target="_blank">
     <i class="ri-rss-line"></i> RSS
   </a>
 </div>

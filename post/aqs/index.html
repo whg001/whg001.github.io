@@ -3,10 +3,10 @@
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>AQS | haogui</title>
-<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1696731704184">
+<link rel="shortcut icon" href="http://whg001.github.io/favicon.ico?v=1696734177667">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
-<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
-<link rel="alternate" type="application/atom+xml" title="AQS | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="http://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="AQS | haogui - Atom Feed" href="http://whg001.github.io/atom.xml">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
 
 
@@ -25,8 +25,8 @@ AQS全称AbstractQueuedSynchronizer，其实这个名字就道出了他的一切
     <div class="main">
       <div class="main-content">
         <div class="site-header">
-  <a href="https://whg001.github.io">
-  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1696731704184" alt="">
+  <a href="http://whg001.github.io">
+  <img class="avatar" src="http://whg001.github.io/images/avatar.png?v=1696734177667" alt="">
   </a>
   <h1 class="site-title">
     haogui
@@ -89,17 +89,17 @@ AQS全称AbstractQueuedSynchronizer，其实这个名字就道出了他的一切
                 6 min read
               </span>
               
-                <a href="https://whg001.github.io/tag/qCSWQaDUs/" class="post-tag">
+                <a href="http://whg001.github.io/tag/qCSWQaDUs/" class="post-tag">
                   # 原创
                 </a>
               
-                <a href="https://whg001.github.io/tag/PNv5KdDzK/" class="post-tag">
+                <a href="http://whg001.github.io/tag/PNv5KdDzK/" class="post-tag">
                   # java
                 </a>
               
             </div>
             
-              <img class="post-feature-image" src="https://whg001.github.io/post-images/aqs.png" alt="">
+              <img class="post-feature-image" src="http://whg001.github.io/post-images/aqs.png" alt="">
             
             <div class="post-content-wrapper">
               <div class="post-content">
@@ -111,7 +111,7 @@ AQS全称AbstractQueuedSynchronizer，其实这个名字就道出了他的一切
 <li>通过改变一个state的值来达到，Synchronizer</li>
 </ol>
 <h2 id="数据结构">数据结构</h2>
-<figure data-type="image" tabindex="1"><img src="https://whg001.github.io/post-images/1626445106497.jpeg" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="1"><img src="http://whg001.github.io/post-images/1626445106497.jpeg" alt="" loading="lazy"></figure>
 <p>AQS核心思想是，如果被请求的共享资源空闲，那么就将当前请求资源的线程设置为有效的工作线程，将共享资源设置为锁定状态；如果共享资源被占用，就需要一定的阻塞等待唤醒机制来保证锁分配。这个机制主要用的是CLH队列的变体实现的，将暂时获取不到锁的线程加入到队列中。</p>
 <p>AQS使用一个Volatile的int类型的成员变量来表示同步状态，通过内置的FIFO队列来完成资源获取的排队工作，通过CAS完成对State值的修改。</p>
 <p>没有获取到的资源的线程，即state值达不到他想要的，<strong>他就会把他生成一个node(将线程存入其中)随后加入队列中,并挂起此线程</strong></p>
@@ -271,7 +271,7 @@ AQS全称AbstractQueuedSynchronizer，其实这个名字就道出了他的一切
         
           <div class="next-post">
             <div class="next">下一篇</div>
-            <a href="https://whg001.github.io/post/atomic-lei-jia-yuan-li/">
+            <a href="http://whg001.github.io/post/atomic-lei-jia-yuan-li/">
               <h3 class="post-title">
                 Atomic累加原理
               </h3>
@@ -309,7 +309,7 @@ AQS全称AbstractQueuedSynchronizer，其实这个名字就道出了他的一切
 
         <div class="site-footer">
   转载请著名出处
-  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+  <a class="rss" href="http://whg001.github.io/atom.xml" target="_blank">
     <i class="ri-rss-line"></i> RSS
   </a>
 </div>

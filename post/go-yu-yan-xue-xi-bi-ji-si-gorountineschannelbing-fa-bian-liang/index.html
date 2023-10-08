@@ -3,10 +3,10 @@
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>go语言学习笔记四-gorountines/channel/并发变量 | haogui</title>
-<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1696731704184">
+<link rel="shortcut icon" href="http://whg001.github.io/favicon.ico?v=1696734177667">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
-<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
-<link rel="alternate" type="application/atom+xml" title="go语言学习笔记四-gorountines/channel/并发变量 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="http://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="go语言学习笔记四-gorountines/channel/并发变量 | haogui - Atom Feed" href="http://whg001.github.io/atom.xml">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
 
 
@@ -22,8 +22,8 @@ go中的gorouti..." />
     <div class="main">
       <div class="main-content">
         <div class="site-header">
-  <a href="https://whg001.github.io">
-  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1696731704184" alt="">
+  <a href="http://whg001.github.io">
+  <img class="avatar" src="http://whg001.github.io/images/avatar.png?v=1696734177667" alt="">
   </a>
   <h1 class="site-title">
     haogui
@@ -86,17 +86,17 @@ go中的gorouti..." />
                 10 min read
               </span>
               
-                <a href="https://whg001.github.io/tag/35CThEehJ/" class="post-tag">
+                <a href="http://whg001.github.io/tag/35CThEehJ/" class="post-tag">
                   # go
                 </a>
               
-                <a href="https://whg001.github.io/tag/qCSWQaDUs/" class="post-tag">
+                <a href="http://whg001.github.io/tag/qCSWQaDUs/" class="post-tag">
                   # 原创
                 </a>
               
             </div>
             
-              <img class="post-feature-image" src="https://whg001.github.io/post-images/go-yu-yan-xue-xi-bi-ji-si-gorountineschannelbing-fa-bian-liang.jpg" alt="">
+              <img class="post-feature-image" src="http://whg001.github.io/post-images/go-yu-yan-xue-xi-bi-ji-si-gorountineschannelbing-fa-bian-liang.jpg" alt="">
             
             <div class="post-content-wrapper">
               <div class="post-content">
@@ -125,7 +125,7 @@ x := &lt;-ch // 在ch中取出一个变量并复制给x
 <p>带缓存的Channel内部持有一个元素队列。队列的最大容量是在调用make函数创建channel时通过第二个参数指定的。</p>
 <pre><code class="language-Go">ch = make(chan string, 3)
 </code></pre>
-<figure data-type="image" tabindex="1"><img src="https://whg001.github.io/post-images/1638109188695.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="1"><img src="http://whg001.github.io/post-images/1638109188695.png" alt="" loading="lazy"></figure>
 <p>向缓存Channel的发送操作就是向内部<strong>缓存队列的尾部插入元素</strong>，接收操作则是从队列的<strong>头部删除元素</strong>。如果内部缓存队列是满的，那么发送操作将阻塞直到因另一个goroutine执行接收操作而释放了新的队列空间。相反，如果channel是空的，接收操作将阻塞直到有另一个goroutine执行发送操作而向队列插入元素</p>
 <blockquote>
 <p>例如 在生产者和消费者之间进行通信时，如果其速度相差太大，或者存在波动显然使用无缓存的channel是不合适的，有缓存的channel更能够将其因为波动性造成的阻塞减少。有缓存的channel可以相当于中间的缓存池</p>
@@ -253,7 +253,7 @@ func Icon(name string) image.Image {
         
           <div class="next-post">
             <div class="next">下一篇</div>
-            <a href="https://whg001.github.io/post/go-yu-yan-xue-xi-bi-ji-san-jie-kou/">
+            <a href="http://whg001.github.io/post/go-yu-yan-xue-xi-bi-ji-san-jie-kou/">
               <h3 class="post-title">
                 go语言学习笔记三-接口
               </h3>
@@ -291,7 +291,7 @@ func Icon(name string) image.Image {
 
         <div class="site-footer">
   转载请著名出处
-  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+  <a class="rss" href="http://whg001.github.io/atom.xml" target="_blank">
     <i class="ri-rss-line"></i> RSS
   </a>
 </div>

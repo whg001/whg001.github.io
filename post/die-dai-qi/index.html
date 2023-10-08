@@ -3,10 +3,10 @@
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>迭代器 | haogui</title>
-<link rel="shortcut icon" href="https://whg001.github.io/favicon.ico?v=1696731704184">
+<link rel="shortcut icon" href="http://whg001.github.io/favicon.ico?v=1696734177667">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
-<link rel="stylesheet" href="https://whg001.github.io/styles/main.css">
-<link rel="alternate" type="application/atom+xml" title="迭代器 | haogui - Atom Feed" href="https://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="http://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="迭代器 | haogui - Atom Feed" href="http://whg001.github.io/atom.xml">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
 
 
@@ -20,8 +20,8 @@
     <div class="main">
       <div class="main-content">
         <div class="site-header">
-  <a href="https://whg001.github.io">
-  <img class="avatar" src="https://whg001.github.io/images/avatar.png?v=1696731704184" alt="">
+  <a href="http://whg001.github.io">
+  <img class="avatar" src="http://whg001.github.io/images/avatar.png?v=1696734177667" alt="">
   </a>
   <h1 class="site-title">
     haogui
@@ -84,17 +84,17 @@
                 10 min read
               </span>
               
-                <a href="https://whg001.github.io/tag/qCSWQaDUs/" class="post-tag">
+                <a href="http://whg001.github.io/tag/qCSWQaDUs/" class="post-tag">
                   # 原创
                 </a>
               
-                <a href="https://whg001.github.io/tag/PNv5KdDzK/" class="post-tag">
+                <a href="http://whg001.github.io/tag/PNv5KdDzK/" class="post-tag">
                   # java
                 </a>
               
             </div>
             
-              <img class="post-feature-image" src="https://whg001.github.io/post-images/die-dai-qi.jpeg" alt="">
+              <img class="post-feature-image" src="http://whg001.github.io/post-images/die-dai-qi.jpeg" alt="">
             
             <div class="post-content-wrapper">
               <div class="post-content">
@@ -279,7 +279,7 @@ public void remove() {
     }
 </code></pre>
 <p>KeyIterator就是取里面的key，ValueIterator就是取value值，于是我建议，当你在遍历中需要用到value和key的时候直接用entry吧。不要在通过啥子KeyIterator遍历到key后，再map.get(key)。好像一直忘记说了foreach只是迭代器的语法糖。你可以反编译进行查看。 javap -c 反编译如下如</p>
-<figure data-type="image" tabindex="1"><img src="https://whg001.github.io/post-images/1630983193308.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="1"><img src="http://whg001.github.io/post-images/1630983193308.png" alt="" loading="lazy"></figure>
 <h2 id="快照">快照</h2>
 <p>​	前面提到过，在遍历时由于他读的是原数组，于是导致其他线程对此数组的增删操作会抛出ConcurrentModificationException，可以你会想我们是不是可以在使用迭代器的时候构建一个快照snap。在此我就分析分析我对这里构建快照的几种方法与其看法。</p>
 <p>1.你可以在构建直接迭代器的时候直接拷贝原数组，在此浅拷贝就行，内存的额外增加不会过大。实现较为简单，但是有多少个迭代器就会增加多少个容器引用的大小，如果同时迭代的过多，内存占有还是很大</p>
@@ -316,7 +316,7 @@ public void remove() {
         
           <div class="next-post">
             <div class="next">下一篇</div>
-            <a href="https://whg001.github.io/post/yuan-cheng-debug/">
+            <a href="http://whg001.github.io/post/yuan-cheng-debug/">
               <h3 class="post-title">
                 远程debug
               </h3>
@@ -354,7 +354,7 @@ public void remove() {
 
         <div class="site-footer">
   转载请著名出处
-  <a class="rss" href="https://whg001.github.io/atom.xml" target="_blank">
+  <a class="rss" href="http://whg001.github.io/atom.xml" target="_blank">
     <i class="ri-rss-line"></i> RSS
   </a>
 </div>
