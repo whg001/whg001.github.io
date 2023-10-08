@@ -1,0 +1,370 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>网络模型解析 | haogui</title>
+<link rel="shortcut icon" href="http://whg001.github.io/favicon.ico?v=1696734925804">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="http://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="网络模型解析 | haogui - Atom Feed" href="http://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="网络模型解析
+此文章由本文由 潘建锋 对应文章摘抄而来https://strikefreedom.top/go-netpoll-io-multiplexing-reactor
+本文讲解涉及到的：I/O 模型、用户/内核空间、epoll、Li..." />
+    <meta name="keywords" content="go,js,java" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="http://whg001.github.io">
+  <img class="avatar" src="http://whg001.github.io/images/avatar.png?v=1696734925804" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              网络模型解析
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-10-08
+              </span>
+              <span>
+                20 min read
+              </span>
+              
+                <a href="http://whg001.github.io/tag/35CThEehJ/" class="post-tag">
+                  # go
+                </a>
+              
+                <a href="http://whg001.github.io/tag/epTCQykWR/" class="post-tag">
+                  # js
+                </a>
+              
+                <a href="http://whg001.github.io/tag/PNv5KdDzK/" class="post-tag">
+                  # java
+                </a>
+              
+            </div>
+            
+              <img class="post-feature-image" src="http://whg001.github.io/post-images/wang-luo-mo-xing-jie-xi.png" alt="">
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h1 id="网络模型解析">网络模型解析</h1>
+<p>此文章由本文由 <a href="https://strikefreedom.top/about-me">潘建锋</a> 对应文章摘抄而来https://strikefreedom.top/go-netpoll-io-multiplexing-reactor</p>
+<p>本文讲解涉及到的：I/O 模型、用户/内核空间、epoll、Linux 源码、goroutine scheduler ，reactor(个人结合了多种情况进行补充)</p>
+<h2 id="用户空间与内核空间">用户空间与内核空间</h2>
+<p>现代操作系统都是采用虚拟存储器，那么对 32 位操作系统而言，它的寻址空间（虚拟存储空间）为 4G（2 的 32 次方）。操作系统的核心是内核，独立于普通的应用程序，可以访问受保护的内存空间，也有访问底层硬件设备的所有权限。为了保证用户进程不能直接操作内核（kernel），保证内核的安全，操心系统将虚拟空间划分为两部分，一部分为内核空间，一部分为用户空间。针对 Linux 操作系统而言，将最高的 1G 字节（从虚拟地址 0xC0000000 到 0xFFFFFFFF），供内核使用，称为内核空间，而将较低的 3G 字节（从虚拟地址 0x00000000 到 0xBFFFFFFF），供各个进程使用，称为用户空间。</p>
+<p><img src="http://whg001.github.io/post-images/1696734701436.png" alt="" loading="lazy"><br>
+<strong>现代的网络服务的主流已经完成从 CPU 密集型到 IO 密集型的转变</strong>，所以服务端程序对 I/O 的处理必不可少，而一旦操作 I/O 则必定要在用户态和内核态之间来回切换</p>
+<h2 id="io-模型">I/O 模型</h2>
+<p>在神作《UNIX 网络编程》里，总结归纳了 5 种 I/O 模型，包括同步和异步 I/O：</p>
+<ul>
+<li>阻塞 I/O (Blocking I/O)</li>
+<li>非阻塞 I/O (Nonblocking I/O)</li>
+<li>I/O 多路复用 (I/O multiplexing)</li>
+<li>信号驱动 I/O (Signal driven I/O)</li>
+<li>异步 I/O (Asynchronous I/O)</li>
+</ul>
+<p>操作系统上的 I/O 是用户空间和内核空间的数据交互，因此 I/O 操作通常包含以下两个步骤：</p>
+<ol>
+<li><strong>等待网络数据到达网卡(读就绪)/等待网卡可写(写就绪) –&gt; 读取/写入到内核缓冲区</strong></li>
+<li><strong>从内核缓冲区复制数据 –&gt; 用户空间(读)/从用户空间复制数据 -&gt; 内核缓冲区(写)</strong></li>
+</ol>
+<p>而判定一个 I/O 模型是同步还是异步，主要看第二步：数据在用户和内核空间之间复制的时候是不是会阻塞当前进程，如果会，则是同步 I/O，否则，就是异步 I/O。基于这个原则，这 5 种 I/O 模型中只有一种异步 I/O 模型：Asynchronous I/O，其余都是同步 I/O 模型。</p>
+<p>这 5 种 I/O 模型的对比如下：</p>
+<figure data-type="image" tabindex="1"><img src="http://whg001.github.io/post-images/1696734726263.png" alt="" loading="lazy"></figure>
+<h3 id="non-blocking-io">Non-blocking I/O</h3>
+<p>什么叫非阻塞 I/O，顾名思义就是：<strong>所有 I/O 操作都是立刻返回而不会阻塞当前用户进程</strong>。I/O 多路复用通常情况下需要和非阻塞 I/O 搭配使用，否则可能会产生意想不到的问题。比如，<strong>epoll 的 ET(边缘触发) 模式下，如果不使用非阻塞 I/O，有极大的概率会导致阻塞 event-loop 线程，从而降低吞吐量</strong>，甚至导致 bug。</p>
+<p>Linux 下，我们可以通过 <code>fcntl</code> 系统调用来设置 <code>O_NONBLOCK</code> 标志位，从而把 socket 设置成 Non-blocking。当对一个 Non-blocking socket 执行读操作时，流程是这个样子：</p>
+<figure data-type="image" tabindex="2"><img src="http://whg001.github.io/post-images/1696734740460.png" alt="" loading="lazy"></figure>
+<p><strong>当用户进程发出 read 操作时，如果 kernel 中的数据还没有准备好，那么它并不会 block 用户进程，而是立刻返回一个 EAGAIN error</strong>。从用户进程角度讲 ，它发起一个 read 操作后，并不需要等待，而是马上就得到了一个结果。用户进程判断结果是一个 error 时，它就知道数据还没有准备好，于是它可以再次发送 read 操作。一旦 kernel 中的数据准备好了，并且又再次收到了用户进程的 system call，那么它马上就将数据拷贝到了用户内存，然后返回。</p>
+<p><strong>所以，Non-blocking I/O 的特点是用户进程需要不断的主动询问 kernel 数据好了没有。下一节我们要讲的 I/O 多路复用需要和 Non-blocking I/O 配合才能发挥出最大的威力</strong>！</p>
+<h2 id="io-多路复用">I/O 多路复用</h2>
+<p><strong>所谓 I/O 多路复用指的就是 select/poll/epoll 这一系列的多路选择器：支持单一线程同时监听多个文件描述符（I/O 事件），阻塞等待，并在其中某个文件描述符可读写时收到通知。</strong></p>
+<p><strong>I/O 复用其实复用的不是 I/O 连接，而是复用线程，让一个 thread of control 能够处理多个连接（I/O 事件）。</strong></p>
+<h3 id="select">select</h3>
+<pre><code class="language-c"> 1#include &lt;sys/select.h&gt;
+ 2
+ 3/* According to earlier standards */
+ 4#include &lt;sys/time.h&gt;
+ 5#include &lt;sys/types.h&gt;
+ 6#include &lt;unistd.h&gt;
+ 7
+ 8int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
+ 9
+10// 和 select 紧密结合的四个宏：
+11void FD_CLR(int fd, fd_set *set);
+12int FD_ISSET(int fd, fd_set *set);
+13void FD_SET(int fd, fd_set *set);
+14void FD_ZERO(fd_set *set);
+
+</code></pre>
+<p>select 是 epoll 之前 Linux 使用的 I/O 事件驱动技术。</p>
+<p>理解 select 的关键在于理解 fd_set，为说明方便，<strong>取 fd_set 长度为 1 字节，fd_set 中的每一 bit 可以对应一个文件描述符 fd，则 1 字节长的 fd_set 最大可以对应 8 个 fd</strong>。select 的调用过程如下：</p>
+<ol>
+<li>执行 FD_ZERO(&amp;set), 则 set 用位表示是 <code>0000,0000</code></li>
+<li>若 fd＝5, 执行 FD_SET(fd, &amp;set); 后 set 变为 0001,0000(第 5 位置为 1)</li>
+<li>再加入 fd＝2, fd=1，则 set 变为 <code>0001,0011</code></li>
+<li>执行 select(6, &amp;set, 0, 0, 0) 阻塞等待</li>
+<li>若 fd=1, fd=2 上都发生可读事件，则 select 返回，此时 set 变为 <code>0000,0011</code> (注意：没有事件发生的 fd=5 被清空)</li>
+</ol>
+<p>基于上面的调用过程，可以得出 select 的特点：</p>
+<ul>
+<li>可监控的文件描述符个数取决于 sizeof(fd_set) 的值。假设服务器上 sizeof(fd_set)＝512，每 bit 表示一个文件描述符，则服务器上支持的最大文件描述符是 512*8=4096。fd_set 的大小调整可参考 <a href="http://www.cppblog.com/CppExplore/archive/2008/03/21/45061.html">【原创】技术系列之 网络模型（二）</a> 中的模型 2，可以有效突破 select 可监控的文件描述符上限</li>
+<li>将 fd 加入 select 监控集的同时，<strong>还要再使用一个数据结构 array 保存放到 select 监控集中的 fd</strong>，一是用于在 select 返回后，array 作为源数据和 fd_set 进行 FD_ISSET 判断。二是 select 返回后会把以前加入的但并无事件发生的 fd 清空，则每次开始 select 前都要重新从 array 取得 fd 逐一加入（FD_ZERO 最先），扫描 array 的同时取得 fd 最大值 maxfd(<strong>记录每次select需要遍历的最大位置</strong>)，用于 select 的第一个参数</li>
+<li>可见 select 模型必须在 select 前循环 array（加 fd，取 maxfd），select 返回后循环 array（FD_ISSET 判断是否有事件发生）</li>
+</ul>
+<p>所以，select 有如下的缺点：</p>
+<ol>
+<li>最大并发数限制：使用 32 个整数的 32 位，即 32*32=1024 来标识 fd，虽然可修改，但是有以下第 2, 3 点的瓶颈</li>
+<li>每次调用 select，都需要把 fd 集合从用户态拷贝到内核态，这个开销在 fd 很多时会很大</li>
+<li>性能衰减严重：每次 kernel 都需要线性扫描整个 fd_set，所以随着监控的描述符 fd 数量增长，其 I/O 性能会线性下降</li>
+</ol>
+<p>poll 的实现和 select 非常相似，只是描述 fd 集合的方式不同，poll 使用 pollfd 结构而不是 select 的 fd_set 结构，poll 解决了最大文件描述符数量限制的问题，但是同样需要从用户态拷贝所有的 fd 到内核态，也需要线性遍历所有的 fd 集合，所以它和 select 只是实现细节上的区分，并没有本质上的区别。</p>
+<h3 id="epoll">epoll</h3>
+<p>epoll 是 Linux kernel 2.6 之后引入的新 I/O 事件驱动技术，I/O 多路复用的核心设计是 1 个线程处理所有连接的 <code>等待消息准备好</code> I/O 事件，这一点上 epoll 和 select&amp;poll 是大同小异的。但 select&amp;poll 错误预估了一件事，当数十万并发连接存在时，可能每一毫秒只有数百个活跃的连接，同时其余数十万连接在这一毫秒是非活跃的。select&amp;poll 的使用方法是这样的： <code>返回的活跃连接 == select(全部待监控的连接)</code> 。</p>
+<p>什么时候会调用 select&amp;poll 呢？在你认为需要找出有报文到达的活跃连接时，就应该调用。所以，select&amp;poll 在高并发时是会被频繁调用的。这样，这个频繁调用的方法就很有必要看看它是否有效率，因为，它的轻微效率损失都会被 <code>高频</code> 二字所放大。它有效率损失吗？显而易见，全部待监控连接是数以十万计的，返回的只是数百个活跃连接，这本身就是无效率的表现。被放大后就会发现，处理并发上万个连接时，select&amp;poll 就完全力不从心了。这个时候就该 epoll 上场了，epoll 通过一些新的设计和优化，基本上解决了 select&amp;poll 的问题。</p>
+<p>epoll 的 API 非常简洁，涉及到的只有 3 个系统调用：</p>
+<pre><code class="language-c">1#include &lt;sys/epoll.h&gt;  
+2int epoll_create(int size); // int epoll_create1(int flags);
+3int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);
+4int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout);
+</code></pre>
+<p>其中，epoll_create 创建一个 epoll 实例并返回 epollfd；epoll_ctl 注册 file descriptor 等待的 I/O 事件(比如 EPOLLIN、EPOLLOUT 等) 到 epoll 实例上；<strong>epoll_wait 则是阻塞监听 epoll 实例上所有的 file descriptor 的 I/O 事件，它接收一个用户空间上的一块内存地址 (events 数组)</strong>，kernel 会在有 I/O 事件发生的时候把文件描述符列表复制到这块内存地址上，然后 epoll_wait 解除阻塞并返回，最后用户空间上的程序就可以对相应的 fd 进行读写了：</p>
+<pre><code class="language-C">1#include &lt;unistd.h&gt;
+2ssize_t read(int fd, void *buf, size_t count);
+3ssize_t write(int fd, const void *buf, size_t count);
+</code></pre>
+<p>epoll 的工作原理如下：</p>
+<figure data-type="image" tabindex="3"><img src="http://whg001.github.io/post-images/1696734774259.png" alt="" loading="lazy"></figure>
+<p>与 select&amp;poll 相比，<strong>epoll 分清了高频调用和低频调用</strong>。例如，epoll_ctl 相对来说就是非频繁调用的，而 epoll_wait 则是会被高频调用的。<strong>所以 epoll 利用 epoll_ctl 来插入或者删除一个 fd，实现用户态到内核态的数据拷贝，这确保了每一个 fd 在其生命周期只需要被拷贝一次，而不是每次调用 epoll_wait 的时候都拷贝一次。 epoll_wait 则被设计成几乎没有入参的调用，相比 select&amp;poll 需要把全部监听的 fd 集合从用户态拷贝至内核态的做法，epoll 的效率就高出了一大截。</strong></p>
+<p>在实现上 epoll 采用红黑树来存储所有监听的 fd，而红黑树本身插入和删除性能比较稳定，时间复杂度 O(logN)。通过 epoll_ctl 函数添加进来的 fd 都会被放在红黑树的某个节点内，所以，重复添加是没有用的。当把 fd 添加进来的时候时候会完成关键的一步：该 fd 会与相应的设备（网卡）驱动程序建立回调关系，也就是在内核中断处理程序为它注册一个回调函数，在 fd 相应的事件触发（中断）之后（设备就绪了），内核就会调用这个回调函数，该回调函数在内核中被称为： <code>ep_poll_callback</code> ，<strong>这个回调函数其实就是把这个 fd 添加到 rdllist 这个双向链表（就绪链表）中</strong>。epoll_wait 实际上就是去检查 rdllist 双向链表中是否有就绪的 fd，当 rdllist 为空（无就绪 fd）时挂起当前进程，直到 rdllist 非空时进程才被唤醒并返回。</p>
+<p>相比于 select&amp;poll 调用时会将全部监听的 fd 从用户态空间拷贝至内核态空间并线性扫描一遍找出就绪的 fd 再返回到用户态，epoll_wait 则是直接返回已就绪 fd，因此 epoll 的 I/O 性能不会像 select&amp;poll 那样随着监听的 fd 数量增加而出现线性衰减，是一个非常高效的 I/O 事件驱动技术。</p>
+<p><strong>由于使用 epoll 的 I/O 多路复用需要用户进程自己负责 I/O 读写，从用户进程的角度看，读写过程是阻塞的，所以 select&amp;poll&amp;epoll 本质上都是同步 I/O 模型，而像 Windows 的 IOCP 这一类的异步 I/O，只需要在调用 WSARecv 或 WSASend 方法读写数据的时候把用户空间的内存 buffer 提交给 kernel，kernel 负责数据在用户空间和内核空间拷贝，完成之后就会通知用户进程，整个过程不需要用户进程参与，所以是真正的异步 I/O。</strong></p>
+<h2 id="go的线程调度模型">go的线程调度模型</h2>
+<blockquote>
+<p>Go netpoller 通过在底层对 epoll/kqueue/iocp 的封装，从而实现了使用同步编程模式达到异步执行的效果。总结来说，所有的网络操作都以网络描述符 netFD 为中心实现。netFD 与底层 PollDesc 结构绑定，当在一个 netFD 上读写遇到 EAGAIN 错误时，就将当前 goroutine 存储到这个 netFD 对应的 PollDesc 中，同时调用 gopark 把当前 goroutine 给 park 住，直到这个 netFD 上再次发生读写事件，才将此 goroutine 给 ready 激活重新运行。显然，在底层通知 goroutine 再次发生读写等事件的方式就是 epoll/kqueue/iocp 等事件驱动机制。</p>
+</blockquote>
+<p>代码编写时，开发者使用的是同步的模式去编写异步的逻辑而且对于开发者来说 I/O 是否阻塞是无感知的，也就是说开发者无需考虑 goroutines 甚至更底层的线程、进程的调度和上下文切换。而 Go netpoller 最底层的事件驱动技术肯定是基于 epoll/kqueue/iocp 这一类的 I/O 事件驱动技术，只不过是把这些调度和上下文切换的工作转移到了 runtime 的 Go scheduler，让它来负责调度 goroutines，从而极大地降低了程序员的心智负担！</p>
+<p>Go netpoller I/O 多路复用搭配 Non-blocking I/O 而打造出来的这个原生网络模型，它最大的价值是把网络 I/O 的控制权牢牢掌握在 Go 自己的 runtime 里，关于这一点我们需要从 Go 的 runtime scheduler 说起，Go 的 G-P-M 调度模型如下：</p>
+<h3 id="gmp">GMP</h3>
+<ul>
+<li>
+<p><strong>G-gorountine，go语言的调度单位</strong>，其数据结构为 runtime.g，运行的函数指针。**数量无限制，其类似线程概念但他并不是真正的线程，用户线程中的栈/堆由内核分配，而他的栈在内核角度看还是堆，不过他由go进程分配，**只是在数据结构上与线程一样。这也就是为什么他的gorountine能无限制</p>
+</li>
+<li>
+<p><strong>P(逻辑Processor/局部调度器)</strong>: 为什么是&quot;<strong>逻辑</strong>&quot;以及为什么是&quot;<strong>局部调度</strong>&quot;, 后面会介绍 ,P是在Go1.2以后为了处理一些问题加入进来的组件. 起着&quot;<strong>胶水/缓冲</strong>&quot;一样的作用. 每个P受M线程管辖, 同时自己手持一个G队列,  他局部调度因为他只调度自己手下的G队列, 相比于&quot;局部调度&quot;, 我们还存在一个&quot;全局&quot;调度<strong>schedt</strong>, 全局调度负责。数据结构runtime.p，per-P的cache等。<strong>默认为机器核数</strong></p>
+</li>
+<li>
+<p><strong>M(代表一个线程)</strong>: M就是一个真正的线程了. 操作系统直接管辖M, 在M绑定了一个有效的P以后, P的调度逻辑开始发挥作用, 内容包含: 从各种队列中获得G, 切换到G的栈上去执行G的函数, 执行完成了以后开始清理. 值得注意的是, M本身不保留任何跟P或者G的相关信息, 这么做是为了能将M独立出来, 让G能够跨M工作。<strong>其数量一般比P多，但不会多太多</strong></p>
+</li>
+</ul>
+<figure data-type="image" tabindex="4"><img src="http://whg001.github.io/post-images/1696734794097.png" alt="" loading="lazy"></figure>
+<p>G 在运行过程中如果被阻塞在某个 system call 操作上，那么不光 G 会阻塞，执行该 G 的 M 也会解绑 P(实质是被 sysmon 抢走了)，与 G 一起进入 sleep 状态(<strong>是m和g进行绑定 由上面的数量可知p和核数相关</strong>)。如果此时有 idle 的 M，则 P 与其绑定继续执行其他 G；如果没有 idle M，但仍然有其他 G 要去执行，那么就会创建一个新的 M。当阻塞在 system call 上的 G 完成 syscall 调用后，G 会去尝试获取一个可用的 P，如果没有可用的 P，那么 G 会被标记为 <code>_Grunnable</code> 并把它放入全局的 runqueue 中等待调度，之前的那个 sleep 的 M 将再次进入 sleep。</p>
+<h2 id="reactor-网络模型">Reactor 网络模型</h2>
+<p>目前 Linux 平台上主流的高性能网络库/框架中，大都采用 Reactor 模式，比如 netty、libevent、libev、ACE，POE(Perl)、Twisted(Python)等。</p>
+<p>Reactor 模式本质上指的是使用 <code>I/O 多路复用(I/O multiplexing) + 非阻塞 I/O(non-blocking I/O)</code> 的模式。</p>
+<p>通常设置一个主线程负责做 event-loop 事件循环和 I/O 读写，通过 select/poll/epoll_wait 等系统调用监听 I/O 事件，业务逻辑提交给其他工作线程去做。而所谓『非阻塞 I/O』的核心思想是指避免阻塞在 read() 或者 write() 或者其他的 I/O 系统调用上，这样可以最大限度的复用 event-loop 线程，让一个线程能服务于多个 sockets。在 Reactor 模式中，I/O 线程只能阻塞在 I/O multiplexing 函数上（select/poll/epoll_wait）。</p>
+<p>Reactor 模式的基本工作流程如下：</p>
+<blockquote>
+<ul>
+<li>Server 端完成在 <code>bind&amp;listen</code> 之后，将 listenfd 注册到 epollfd 中，最后进入 event-loop 事件循环。循环过程中会调用 <code>select/poll/epoll_wait</code> 阻塞等待，若有在 listenfd 上的新连接事件则解除阻塞返回，并调用 <code>socket.accept</code> 接收新连接 connfd，并将 connfd 加入到 epollfd 的 I/O 复用（监听）队列。</li>
+<li>当 connfd 上发生可读/可写事件也会解除 <code>select/poll/epoll_wait</code> 的阻塞等待，然后进行 I/O 读写操作，这里读写 I/O 都是非阻塞 I/O，这样才不会阻塞 event-loop 的下一个循环。然而，这样容易割裂业务逻辑，不易理解和维护。</li>
+<li>调用 <code>read</code> 读取数据之后进行解码并放入队列中，等待工作线程处理。</li>
+<li>工作线程处理完数据之后，返回到 event-loop 线程，由这个线程负责调用 <code>write</code> 把数据写回 client。</li>
+</ul>
+</blockquote>
+<p>accept 连接以及 conn 上的读写操作若是在主线程完成，则要求是非阻塞 I/O，因为 Reactor 模式一条最重要的原则就是：I/O 操作不能阻塞 event-loop 事件循环。<strong>实际上 event loop 可能也可以是多线程的，只是一个线程里只有一个 select/poll/epoll_wait</strong>。</p>
+<p>上面提到了 Go netpoller 在某些场景下可能因为创建太多的 goroutine 而过多地消耗系统资源，而在现实世界的网络业务中，服务器持有的海量连接中在极短的时间窗口内只有极少数是 active 而大多数则是 idle，就像这样（非真实数据，仅仅是为了比喻）</p>
+<h3 id="单reactor单线程模型-redis">单Reactor单线程模型-redis</h3>
+<figure data-type="image" tabindex="5"><img src="http://whg001.github.io/post-images/1696734811811.png" alt="" loading="lazy"></figure>
+<h3 id="单reactor多线程模型-node">单Reactor多线程模型-node</h3>
+<p>node的异步IO是基于事件驱动的非阻塞I/O模型</p>
+<p>node.js接受到的请求都会加入到EventQueue中，会等到EventLoop(为epoll)来进行处理，<strong>对于EventLoop中有阻塞操作的则会将其加入ThreadPool中等待其准备就绪再加入EventQueue中</strong>。</p>
+<figure data-type="image" tabindex="6"><img src="http://whg001.github.io/post-images/1696734819710.png" alt="" loading="lazy"></figure>
+<h3 id="主从reactor多线程模型-netty">主从Reactor多线程模型-netty</h3>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B%E8%A7%A3%E6%9E%90">网络模型解析</a>
+<ul>
+<li><a href="#%E7%94%A8%E6%88%B7%E7%A9%BA%E9%97%B4%E4%B8%8E%E5%86%85%E6%A0%B8%E7%A9%BA%E9%97%B4">用户空间与内核空间</a></li>
+<li><a href="#io-%E6%A8%A1%E5%9E%8B">I/O 模型</a>
+<ul>
+<li><a href="#non-blocking-io">Non-blocking I/O</a></li>
+</ul>
+</li>
+<li><a href="#io-%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8">I/O 多路复用</a>
+<ul>
+<li><a href="#select">select</a></li>
+<li><a href="#epoll">epoll</a></li>
+</ul>
+</li>
+<li><a href="#go%E7%9A%84%E7%BA%BF%E7%A8%8B%E8%B0%83%E5%BA%A6%E6%A8%A1%E5%9E%8B">go的线程调度模型</a>
+<ul>
+<li><a href="#gmp">GMP</a></li>
+</ul>
+</li>
+<li><a href="#reactor-%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B">Reactor 网络模型</a>
+<ul>
+<li><a href="#%E5%8D%95reactor%E5%8D%95%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B-redis">单Reactor单线程模型-redis</a></li>
+<li><a href="#%E5%8D%95reactor%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B-node">单Reactor多线程模型-node</a></li>
+<li><a href="#%E4%B8%BB%E4%BB%8Ereactor%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B-netty">主从Reactor多线程模型-netty</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="http://whg001.github.io/post/she-ji-shu-ju-mi-ji-xing-ying-yong-di-yi-er-zhang/">
+              <h3 class="post-title">
+                设计数据密集型应用第一二章
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="http://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
