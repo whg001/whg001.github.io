@@ -1,0 +1,393 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>事务 | haogui</title>
+<link rel="shortcut icon" href="http://whg001.github.io/favicon.ico?v=1696747678962">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="http://whg001.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="事务 | haogui - Atom Feed" href="http://whg001.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="事务所提供的安全保证，通常由众所周知的首字母缩略词 ACID 来描述，ACID 代表 原子性（Atomicity），一致性（Consistency），隔离性（Isolation） 和 **持久性（Durability）**原子性
+但实际上，..." />
+    <meta name="keywords" content="数据库" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="http://whg001.github.io">
+  <img class="avatar" src="http://whg001.github.io/images/avatar.png?v=1696747678962" alt="">
+  </a>
+  <h1 class="site-title">
+    haogui
+  </h1>
+  <p class="site-description">
+    人得自个成全自个
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="https://whg001.github.io/post/java-xian-cheng-chi" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              事务
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-10-08
+              </span>
+              <span>
+                12 min read
+              </span>
+              
+                <a href="http://whg001.github.io/tag/TBq3smlQX/" class="post-tag">
+                  # 数据库
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <p>事务所提供的安全保证，通常由众所周知的首字母缩略词 ACID 来描述，ACID 代表 <strong>原子性（Atomicity）</strong>，<strong>一致性（Consistency）</strong>，<strong>隔离性（Isolation）</strong> 和 **持久性（Durability）**原子性</p>
+<p>但实际上，不同数据库的 ACID 实现并不相同。</p>
+<h2 id="原子性">原子性</h2>
+<p>在mysql中一般原子性视为在同一个事务中的操作：要么完全成功，要么完全失败。</p>
+<p><strong>原子性的结果就是没有中间状态</strong>，如果有中间状态则一致性就不会得到满足</p>
+<h3 id="mysql-原子性实现原理">MySQL 原子性实现原理</h3>
+<ul>
+<li>通过 <code>undolog</code> 在失败时回滚保证在<strong>结果上是原子性的</strong>， 即没有中间状态。</li>
+<li>通过<code>隔离性</code>保证了在<strong>其他并发事务看来是原子性的</strong>，即中间状态对外不可见</li>
+</ul>
+<p>innodb的回滚操作是由<code>undolog</code>来的实现其特性的</p>
+<blockquote>
+<p>undo log 属于逻辑日志，它记录的是 sql 执行相关的信息。当发生回滚时，InnoDB 会根据 undo log 的内容做与之前相反的工作：对于每个 insert，回滚时会执行 delete；对于每个 delete，回滚时会执行insert；对于每个 update，回滚时会执行一个相反的 update，把数据改回去。</p>
+<p>当没有事务需要undo log时才会被删掉</p>
+</blockquote>
+<p>例如：假设一个值从 1 被按顺序改成了 2、3、4。在回滚日志里面就会有类似下面的记录</p>
+<figure data-type="image" tabindex="1"><img src="http://whg001.github.io/post-images/1696747588062.png" alt="" loading="lazy"></figure>
+<h3 id="特殊情况处理">特殊情况处理</h3>
+<p>如果在事务中执行了一些语句，但没有显式地提交或回滚事务，以下是 InnoDB 存储引擎的处理方式：</p>
+<ol>
+<li>会话级别的自动回滚：
+<ul>
+<li>如果在 MySQL 会话中启动了一个事务（执行了 <code>BEGIN</code>），但没有显式地提交或回滚事务，<strong>那么当会话结束时</strong>（例如，关闭连接或断开连接），InnoDB 会自动回滚未提交的事务。这样可以确保未提交的事务不会对其他会话产生影响。</li>
+</ul>
+</li>
+<li>崩溃恢复：
+<ul>
+<li>如果发生数据库崩溃或服务器故障，InnoDB 存储引擎会使用**日志（redo log）**来进行恢复(redo log commit的状态)。</li>
+<li>在数据库重新启动时，InnoDB 会检测到存在未提交的事务，并尝试回滚这些未提交的事务，以确保数据库的一致性。</li>
+</ul>
+</li>
+</ol>
+<h2 id="持久性">持久性</h2>
+<p>持久性是指事务一旦提交，它对数据库的改变就应该是永久性的。接下来的其他操作或故障不应该对其有任何影响。</p>
+<p><strong>InnoDB 通过 redo log 与bin log重做日志保证了事务的持久性。</strong></p>
+<h3 id="redo-log">redo log</h3>
+<blockquote>
+<p>redo log(重做日志)-<strong>引擎层日志</strong>，记录的是“在某个数据页上做了什么修改”。</p>
+</blockquote>
+<p>wal(write ahead log)机制：事务开始之后就产生 redo log，redo log 的落盘并不是随着事务的提交才写入的，而是在事务的执行过程中，便开始写入 redo log 文件中。</p>
+<p>其结构为一个环状：一个write pos记录其落盘的位置，一个checkpoint记录其要擦除的位置</p>
+<figure data-type="image" tabindex="2"><img src="http://whg001.github.io/post-images/1696747603182.png" alt="" loading="lazy"></figure>
+<h3 id="bin-log">bin log</h3>
+<blockquote>
+<p>bin log(归档日志) - <strong>server层日志</strong>。是逻辑日志，记录的是这个语句的原始逻辑，用于数据的归档。比如“给 ID=2 这一行的 c 字段加 1“</p>
+</blockquote>
+<p>支持3种模式。</p>
+<ol>
+<li>Statement:记录的是SQL本身。</li>
+<li>Row: 不记录具体sql，只保存哪行记录被修改成什么值。</li>
+<li>Mixed:此格式是Statement和Row格式的结合</li>
+</ol>
+<h3 id="二阶段提交">二阶段提交</h3>
+<p>server层与引擎层 是如何<strong>协同确定</strong>这个事务是否提交？</p>
+<figure data-type="image" tabindex="3"><img src="http://whg001.github.io/post-images/1696747631069.png" alt="" loading="lazy"></figure>
+<p>如上图 左侧颜色深一点的表示server层，浅一点的是innodb引擎层。redo log存在parpare阶段和commit阶段。</p>
+<p>当redo log相关tx_id是停留在parpare阶段时，需要更具binlog 来判断redo log是否要回滚。</p>
+<h3 id="crash-safe">crash-safe</h3>
+<blockquote>
+<p>crash-safe 是指数据库系统在面临崩溃或断电等意外故障时，能够保证数据的一致性和持久性，以及在恢复后能够正确恢复到一致的状态。</p>
+</blockquote>
+<p>在mysql中 innodb通过redo log来实现crash-safe能力</p>
+<p>当数据库奔溃了，重启后会存在部分未落盘的脏数据。于是读到的可能会是脏数据。但其可以redo中记录的write pos(落盘的指针)，来确定哪些是还未落盘的。只需把后续redo log重新加载一遍即可。</p>
+<p>但bin log是追加写的形式提供归档能力，且没有落盘相关记录。crash时不能判定binlog中哪些内容是已经写入到磁盘，哪些还没被写入。</p>
+<h2 id="隔离性isolation">隔离性（isolation）</h2>
+<p>总所皆知innodb支持的隔离性支持以下几种</p>
+<ol>
+<li>读未提交（READ UNCOMMITTED）</li>
+<li>读提交 （READ COMMITTED）</li>
+<li>可重复读 （REPEATABLE READ）</li>
+<li>串行化 （SERIALIZABLE）</li>
+</ol>
+<p>mysql是如何在一个数据库实例中能同时支持不同会话实现不同隔离级别的呢</p>
+<pre><code class="language-sql">SET TRANSACTION ISOLATION LEVEL &lt;isolation_level&gt;;
+# SERIALIZABLE;READ UNCOMMITTED;READ COMMITTED;REPEATABLE READ
+</code></pre>
+<h3 id="mvcc">mvcc</h3>
+<p>所谓的 MVCC （Multi-Version Concurrency Control ，多版本并发控制）指的就 是在使用 READ COMMITTD 、 REPEATABLE READ 这两种隔离级别的事务在执行普通的 SEELCT 操作时访问记录的<strong>版 本链的过程</strong>，这样子可以使不同事务的 读-写 、 写-读 操作并发执行，从而提升系统性能。</p>
+<p>快照隔离的一个关键原则是：<strong>读不阻塞写，写不阻塞读</strong>。</p>
+<h4 id="版本链">版本链</h4>
+<p>每次对记录进行改动，都会记录一条<code>undo日志</code>，每条<code>undo日志</code>也都有一个<code>roll_pointer</code>属性（<code>INSERT</code>操作对应的<code>undo日志</code>没有该属性，因为该记录并没有更早的版本），可以将这些<code>undo日志</code>都连起来，串成一个链表，所以现在的情况就像下图一样：</p>
+<figure data-type="image" tabindex="4"><img src="http://whg001.github.io/post-images/1696747648645.png" alt="" loading="lazy"></figure>
+<p>他的顺序 是把number为1的 的 刘备，改为了 刘备-&gt; 关羽 -&gt; 张飞。其中有2个事务，刘备是事务trx_id = 80改的，关羽 和 张飞是在同一事物 trx_id = 100中改的</p>
+<ul>
+<li>undologo: 记录的是上个版本的值用于回滚等</li>
+<li>trx_id: 每次一个事务对某条聚簇索引记录进行改动时，都会把该事务的 事务id 赋值给 trx_id 隐藏列。是依次递增的</li>
+<li>roll_pointer : 每次对某条聚簇索引记录进行改动时，都会把旧的版本写入到 undo日志 中，然后这个隐藏 列就相当于一个指针，可以通过它来找到该记录修改前的信息。</li>
+</ul>
+<h4 id="trx_id">trx_id</h4>
+<p>innodb的事务管理器负责为事务分配唯一的 <code>trx_id</code>，跟踪事务的执行过程。</p>
+<p>事务管理器会为该事务分配一个唯一的 <code>trx_id</code>。这个 <code>trx_id</code> 是一个递增的数字</p>
+<p>实际上 当你begin时不会分配trx_id。如果没有update时，分配的一直是一个虚拟的trx_id。这个虚拟的trx_id会远大于实际的事务id，这样如果可重复读则也不会读到被修改的数据</p>
+<pre><code class="language-sql">select trx_id, trx_state, trx_started, trx_mysql_thread_id from information_schema.innodb_trx\G
+</code></pre>
+<blockquote>
+<p>A transaction ID is only needed for a transaction that might perform write operations or locking reads such as SELECT … FOR UPDATE.</p>
+</blockquote>
+<p>只有在执行写操作或锁定读(SELECT ... FOR UPDATE)语句时，才需要事务id。否则在一个只读事务中的事务id值都默认为0。</p>
+<h3 id="readview-快照">ReadView-快照</h3>
+<p>需要判断一下版本链中的哪个版本是当前事务可见的。为 此，设计 InnoDB 的大叔提出了一个 ReadView 的概念，这个 ReadView 中主要包含4个比较重要的内容：</p>
+<ul>
+<li>
+<p>m_ids ：表示在生成 ReadView 时当前系统中活跃的读写事务的 事务id 列表。</p>
+</li>
+<li>
+<p>min_trx_id ：表示在生成 ReadView 时当前系统中活跃的读写事务中最小的 事务id ，也就是 m_ids 中的最 小值。</p>
+</li>
+<li>
+<p>max_trx_id ：表示生成 ReadView 时系统中应该分配给下一个事务的 id 值。</p>
+<blockquote>
+<p>注意max_trx_id并不是m_ids中的最大值，事务id是递增分配的。比方说现在有id为1，2，3这三 个事务，之后id为3的事务提交了。那么一个新的读事务在生成ReadView时，m_ids就包括1和2，min_trx_id的值就是1，max_trx_id的值就是4。</p>
+</blockquote>
+</li>
+<li>
+<p>creator_trx_id ：表示生成该 ReadView 的事务的 事务id 。</p>
+</li>
+</ul>
+<p>有了这个 ReadView ，这样在访问某条记录时，只需要按照下边的步骤判断记录的某个版本是否可见：</p>
+<ul>
+<li>如果被访问版本的 trx_id 属性值与 ReadView 中的 creator_trx_id 值相同，意味着当前事务在访问它自己 修改过的记录，所以该版本可以被当前事务访问。</li>
+<li>如果被访问版本的 trx_id 属性值小于 ReadView 中的 min_trx_id 值，表明生成该版本的事务在当前事务生 成 ReadView 前已经提交，所以该版本可以被当前事务访问。</li>
+<li>如果被访问版本的 trx_id 属性值大于 ReadView 中的 max_trx_id 值，表明生成该版本的事务在当前事务生 成 ReadView 后才开启，所以该版本不可以被当前事务访问。</li>
+<li>如果被访问版本的 trx_id 属性值在 ReadView 的 min_trx_id 和 max_trx_id 之间，那就需要判断一下 trx_id 属性值是不是在 m_ids 列表中，如果在，说明创建 ReadView 时生成该版本的事务还是活跃的，该 版本不可以被访问；如果不在，说明创建 ReadView 时生成该版本的事务已经被提交，该版本可以被访问。</li>
+</ul>
+<p>为了形象化下图是readView的大概样子，</p>
+<figure data-type="image" tabindex="5"><img src="http://whg001.github.io/post-images/1696747663148.png" alt="" loading="lazy"></figure>
+<h3 id="不同隔离级别readview生成时间">不同隔离级别readView生成时间</h3>
+<p>READ COMMITTED隔离级别的事务在<strong>每次读取数据前</strong>都生成一个ReadView。于是在执行过程中如果，在他之前的事务提交了他就能看到</p>
+<p>REPEATABLE READ —— 在<strong>第一次读取数据时</strong>生成一个ReadView，之后的语句都用此视图，于是在执行过程中如果，在他之前的事务提交了他也看不到</p>
+<p>再次说明：</p>
+<p>READ COMMITTD 、 REPEATABLE READ 这两个隔离级别的一个很大不同就是：生成ReadView的时机不同，READ COMMITTD在每一 次进行普通SELECT操作前都会生成一个ReadView，而REPEATABLE READ只在第一次进行普通SELECT操作 前生成一个ReadView，之后的查询操作都重复使用这个ReadView就好了。</p>
+<p>大家有没有发现两件事儿：</p>
+<ul>
+<li>我们说 insert undo 在事务提交之后就可以被释放掉了，而 update undo 由于还需要支持 MVCC ，不能立即 删除掉。</li>
+<li>为了支持 MVCC ，对于 delete mark 操作来说，仅仅是在记录上打一个删除标记，并没有真正将它删除掉。</li>
+</ul>
+<p>随着系统的运行，在确定系统中包含最早产生的那个 ReadView 的事务不会再访问某些 update undo日志 以及被 打了删除标记的记录后，有一个后台运行的 purge线程 会把它们真正的删除掉。</p>
+<h3 id="当前读-幻读">当前读-幻读？</h3>
+<blockquote>
+<p>定义：当你改变一个数据时，会读取当前值最新提交的数据再进行更新。</p>
+<p>目的：防止快照读取过时数据</p>
+</blockquote>
+<p>MySQL 的默认事务隔离级别是可重复读（Repeatable Read），会开启当前读。</p>
+<blockquote>
+<p>想要关闭可调整隔离级别</p>
+</blockquote>
+<p>这样会存在一个情况(不能说是问题)</p>
+<ol>
+<li>A事务：读取id=1的记录为，发现number=1</li>
+<li>B事务：修改id=1的记录为，name=number+1</li>
+<li>B事务：进行提交</li>
+<li>A事务：进行数据修改，修改id=1的记录为，name=number+1</li>
+<li>A事务：读取id=1的记录为，发现number=3</li>
+<li>A事务：提交</li>
+</ol>
+<p>此时id=1的记录为，number=3。对于A来说就是幻读。</p>
+<p><strong>快照读的情况下可以解决幻读问题，但是在当前读的情况下是不能解决幻读的</strong>。</p>
+<h2 id="mysql-隔离使用的方案">Mysql 隔离使用的方案</h2>
+<p>读操作利用多版本并发控制（<code>MVCC</code>），写操作进行<code>加锁</code>。</p>
+<blockquote>
+<p>写操作肯定针对的是最新版本的记录，读记录的历史版本和改动记录的最新版本本身并不冲突，也就是采用<code>MVCC</code>时，<code>读-写</code>操作并不冲突。</p>
+</blockquote>
+<pre><code>小贴士：我们说过普通的SELECT语句在READ COMMITTED和REPEATABLE READ隔离级别下会使用到MVCC读取记录。在READ COMMITTED隔离级别下，一个事务在执行过程中每次执行SELECT操作时都会生成一个ReadView，ReadView的存在本身就保证了事务不可以读取到未提交的事务所做的更改，也就是避免了脏读现象；REPEATABLE READ隔离级别下，一个事务在执行过程中只有第一次执行SELECT操作才会生成一个ReadView，之后的SELECT操作都复用这个ReadView，这样也就避免了不可重复读和幻读的问题。
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E5%8E%9F%E5%AD%90%E6%80%A7">原子性</a>
+<ul>
+<li><a href="#mysql-%E5%8E%9F%E5%AD%90%E6%80%A7%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86">MySQL 原子性实现原理</a></li>
+<li><a href="#%E7%89%B9%E6%AE%8A%E6%83%85%E5%86%B5%E5%A4%84%E7%90%86">特殊情况处理</a></li>
+</ul>
+</li>
+<li><a href="#%E6%8C%81%E4%B9%85%E6%80%A7">持久性</a>
+<ul>
+<li><a href="#redo-log">redo log</a></li>
+<li><a href="#bin-log">bin log</a></li>
+<li><a href="#%E4%BA%8C%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4">二阶段提交</a></li>
+<li><a href="#crash-safe">crash-safe</a></li>
+</ul>
+</li>
+<li><a href="#%E9%9A%94%E7%A6%BB%E6%80%A7isolation">隔离性（isolation）</a>
+<ul>
+<li><a href="#mvcc">mvcc</a>
+<ul>
+<li><a href="#%E7%89%88%E6%9C%AC%E9%93%BE">版本链</a></li>
+<li><a href="#trx_id">trx_id</a></li>
+</ul>
+</li>
+<li><a href="#readview-%E5%BF%AB%E7%85%A7">ReadView-快照</a></li>
+<li><a href="#%E4%B8%8D%E5%90%8C%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%ABreadview%E7%94%9F%E6%88%90%E6%97%B6%E9%97%B4">不同隔离级别readView生成时间</a></li>
+<li><a href="#%E5%BD%93%E5%89%8D%E8%AF%BB-%E5%B9%BB%E8%AF%BB">当前读-幻读？</a></li>
+</ul>
+</li>
+<li><a href="#mysql-%E9%9A%94%E7%A6%BB%E4%BD%BF%E7%94%A8%E7%9A%84%E6%96%B9%E6%A1%88">Mysql 隔离使用的方案</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="http://whg001.github.io/post/explain/">
+              <h3 class="post-title">
+                explain
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'b908b3d493434141cd44',
+    clientSecret: '3bac7117ff4b3e75eb306e29708aef5a65fb483d',
+    repo: 'blog-comments',
+    owner: 'whg001',
+    admin: ['whg001'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  转载请著名出处
+  <a class="rss" href="http://whg001.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
