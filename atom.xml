@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>http://whg001.github.io</id>
     <title>haogui</title>
-    <updated>2023-10-08T03:18:35.018Z</updated>
+    <updated>2023-10-08T03:23:19.867Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="http://whg001.github.io"/>
     <link rel="self" href="http://whg001.github.io/atom.xml"/>
@@ -10,6 +10,13 @@
     <logo>http://whg001.github.io/images/avatar.png</logo>
     <icon>http://whg001.github.io/favicon.ico</icon>
     <rights>All rights reserved 2023, haogui</rights>
+    <entry>
+        <title type="html"><![CDATA[explain]]></title>
+        <id>http://whg001.github.io/post/explain/</id>
+        <link href="http://whg001.github.io/post/explain/">
+        </link>
+        <updated>2023-10-08T03:21:19.000Z</updated>
+    </entry>
     <entry>
         <title type="html"><![CDATA[网络模型解析]]></title>
         <id>http://whg001.github.io/post/wang-luo-mo-xing-jie-xi/</id>
@@ -72,12 +79,5 @@
         <link href="http://whg001.github.io/post/fu-wu-ti-gong-zhe-kuang-jia-zai-jdbc-zhong-de-ying-yong/">
         </link>
         <updated>2021-12-12T09:26:47.000Z</updated>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[go语言学习笔记四-gorountines/channel/并发变量]]></title>
-        <id>http://whg001.github.io/post/go-yu-yan-xue-xi-bi-ji-si-gorountineschannelbing-fa-bian-liang/</id>
-        <link href="http://whg001.github.io/post/go-yu-yan-xue-xi-bi-ji-si-gorountineschannelbing-fa-bian-liang/">
-        </link>
-        <updated>2021-11-28T14:19:19.000Z</updated>
     </entry>
 </feed>
